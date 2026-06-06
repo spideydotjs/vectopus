@@ -68,3 +68,17 @@ To preview the production build locally:
 ```bash
 npm run preview
 ```
+
+## Contributing
+
+Contributions are welcome. Please feel free to submit issues or pull requests to help improve Vectopus:
+
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes (`git commit -m 'feat: add some amazing feature'`).
+4. Push to the branch (`git push origin feature/amazing-feature`).
+5. Open a Pull Request.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0) - see the [LICENSE](LICENSE) file for details.
