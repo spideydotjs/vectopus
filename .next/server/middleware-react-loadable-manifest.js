@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST="{\"app/page.tsx -> @/components/Vetopus\":{\"id\":\"app/page.tsx -> @/components/Vetopus\",\"files\":[\"static/chunks/_app-pages-browser_src_components_Vetopus_tsx.js\"]}}"
