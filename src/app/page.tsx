@@ -2,11 +2,10 @@
 
 import dynamic from "next/dynamic";
 
-const Vetopus = dynamic(
-  () => import("@/components/Vetopus").then((mod) => mod.Vetopus),
-  { ssr: false },
-);
+const Vectopus = dynamic(() => import("@/components/Vectopus").then((mod) => mod.Vectopus), {
+  ssr: false,
+});
 
 export default function Home() {
-  return <Vetopus />;
+  return <Vectopus />;
 }

@@ -1,4 +1,4 @@
-export function VetopusLogo({ className }: { className?: string }) {
+export function VectopusLogo({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 32 32"

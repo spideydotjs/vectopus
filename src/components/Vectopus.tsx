@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { VetopusLogo } from "./VetopusLogo";
+import { VectopusLogo } from "./VectopusLogo";
 import { vectorizePng, type Mode, type Smoothing, type VectorizeOptions } from "@/lib/vectorize";
 import { preprocessImage, type PreprocessOptions } from "@/lib/preprocessor";
 import {
@@ -36,7 +36,7 @@ function formatBytes(n: number) {
 type ViewMode = "compare" | "split" | "svg-only" | "original";
 type PresetType = "logo" | "detailed" | "silhouette" | "outline" | "pixel" | "custom";
 
-export function Vetopus() {
+export function Vectopus() {
   // File upload states
   const [file, setFile] = useState<File | null>(null);
   const [pngUrl, setPngUrl] = useState<string | null>(null);
@@ -356,10 +356,10 @@ export function Vetopus() {
       {/* Header */}
       <header className="border-b border-border/40 backdrop-blur-md bg-background/80 sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <VetopusLogo className="h-8 w-8 text-pink animate-pulse" />
+          <VectopusLogo className="h-8 w-8 text-pink animate-pulse" />
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              vetopus{" "}
+              vectopus{" "}
               <span className="text-xs bg-pink/10 text-pink px-2 py-0.5 rounded-[4px] font-mono">
                 v2.0
               </span>
