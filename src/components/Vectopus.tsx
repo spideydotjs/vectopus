@@ -426,14 +426,25 @@ export function Vectopus() {
   const handleWheel = (e: React.WheelEvent) => {
     if (!file) return;
     e.preventDefault();
-    const factor = 1.15;
-    const nextZoom = e.deltaY < 0 ? zoom * factor : zoom / factor;
-    setZoom(Math.min(12, Math.max(0.75, nextZoom)));
+    const factor = 1.18;
+    // Unlimited zoom: 0.005 (0.5%) up to 250 (25,000%)
+    const nextZoom = Math.min(250, Math.max(0.005, e.deltaY < 0 ? zoom * factor : zoom / factor));
+    if (splitContainerRef.current && Math.abs(nextZoom - zoom) > 0.00001) {
+      const rect = splitContainerRef.current.getBoundingClientRect();
+      const mouseRelX = e.clientX - (rect.left + rect.width / 2);
+      const mouseRelY = e.clientY - (rect.top + rect.height / 2);
+      const ratio = nextZoom / zoom;
+      setPan((prev) => ({
+        x: mouseRelX - (mouseRelX - prev.x) * ratio,
+        y: mouseRelY - (mouseRelY - prev.y) * ratio,
+      }));
+      setZoom(nextZoom);
+    }
   };
 
   const adjustZoom = (type: "in" | "out" | "reset") => {
-    if (type === "in") setZoom((z) => Math.min(12, z * 1.3));
-    else if (type === "out") setZoom((z) => Math.max(0.75, z / 1.3));
+    if (type === "in") setZoom((z) => Math.min(250, z * 1.35));
+    else if (type === "out") setZoom((z) => Math.max(0.005, z / 1.35));
     else {
       setZoom(1);
       setPan({ x: 0, y: 0 });
@@ -1089,7 +1100,11 @@ export function Vectopus() {
                     <ZoomOut className="w-3.5 h-3.5" />
                   </button>
                   <span className="text-xs font-mono min-w-[50px] text-center text-white">
-                    {Math.round(zoom * 100)}%
+                    {zoom >= 10
+                      ? `${Math.round(zoom * 100)}%`
+                      : zoom < 0.1
+                      ? `${(zoom * 100).toFixed(1)}%`
+                      : `${Math.round(zoom * 100)}%`}
                   </span>
                   <button
                     onClick={() => adjustZoom("in")}
@@ -1111,7 +1126,7 @@ export function Vectopus() {
                 {/* Drag-to-pan helper instructions */}
                 <div className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-[6px] border border-border/30 text-[9px] font-mono text-muted-foreground pointer-events-none flex items-center gap-2">
                   <Info className="w-3 h-3 text-pink" />
-                  Drag workspace to pan · Scroll to zoom
+                  Drag workspace to pan · Unlimited focal zoom
                 </div>
 
                 {/* Main Interactive Screen */}
@@ -1128,7 +1143,9 @@ export function Vectopus() {
                 >
                   {/* Outer transformed wrapper containing the image panels */}
                   <div
-                    className="relative transition-transform duration-75 ease-out flex items-center justify-center"
+                    className={`relative ${
+                      isDragging ? "transition-none" : "transition-transform duration-75 ease-out"
+                    } flex items-center justify-center`}
                     style={{
                       transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                       transformOrigin: "center center",

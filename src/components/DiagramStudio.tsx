@@ -48,12 +48,109 @@ type DiagramType = "flowchart" | "mindmap";
 type FlowchartOrientation = "TD" | "LR";
 type ComplexityLevel = "overview" | "standard" | "deep";
 
+export type DiagramThemeId = "cyberpunk" | "matrix" | "sapphire" | "amber" | "monochrome";
+
+export interface DiagramThemeConfig {
+  id: DiagramThemeId;
+  name: string;
+  dotColor: string;
+  accent: string;
+  secondary: string;
+  glow: string;
+  bg: string;
+  cardBg: string;
+  border: string;
+  textColor: string;
+  nodeBkg: string;
+  subgraphBkg: string;
+  lineColor: string;
+}
+
+export const DIAGRAM_THEMES: Record<DiagramThemeId, DiagramThemeConfig> = {
+  cyberpunk: {
+    id: "cyberpunk",
+    name: "Cyberpunk",
+    dotColor: "#ec4899",
+    accent: "#ec4899",
+    secondary: "#06b6d4",
+    glow: "rgba(236, 72, 153, 0.4)",
+    bg: "#09090b",
+    cardBg: "#121217",
+    border: "#27272a",
+    textColor: "#fafafa",
+    nodeBkg: "#18181f",
+    subgraphBkg: "#111116",
+    lineColor: "#ec4899",
+  },
+  matrix: {
+    id: "matrix",
+    name: "Matrix Neon",
+    dotColor: "#10b981",
+    accent: "#10b981",
+    secondary: "#34d399",
+    glow: "rgba(16, 185, 129, 0.4)",
+    bg: "#050a06",
+    cardBg: "#0a130c",
+    border: "#1c3823",
+    textColor: "#dcfce7",
+    nodeBkg: "#0f1d12",
+    subgraphBkg: "#081009",
+    lineColor: "#10b981",
+  },
+  sapphire: {
+    id: "sapphire",
+    name: "Cosmic Sapphire",
+    dotColor: "#3b82f6",
+    accent: "#3b82f6",
+    secondary: "#38bdf8",
+    glow: "rgba(59, 130, 246, 0.4)",
+    bg: "#070b19",
+    cardBg: "#0c152e",
+    border: "#1e293b",
+    textColor: "#f0f9ff",
+    nodeBkg: "#0f1f42",
+    subgraphBkg: "#091326",
+    lineColor: "#38bdf8",
+  },
+  amber: {
+    id: "amber",
+    name: "Sunset Amber",
+    dotColor: "#f59e0b",
+    accent: "#f59e0b",
+    secondary: "#f43f5e",
+    glow: "rgba(245, 158, 11, 0.4)",
+    bg: "#120e0a",
+    cardBg: "#1c140d",
+    border: "#3d2b17",
+    textColor: "#fef3c7",
+    nodeBkg: "#261a0f",
+    subgraphBkg: "#170f08",
+    lineColor: "#f59e0b",
+  },
+  monochrome: {
+    id: "monochrome",
+    name: "Monochrome Pro",
+    dotColor: "#e4e4e7",
+    accent: "#ffffff",
+    secondary: "#a1a1aa",
+    glow: "rgba(255, 255, 255, 0.25)",
+    bg: "#09090b",
+    cardBg: "#18181b",
+    border: "#3f3f46",
+    textColor: "#ffffff",
+    nodeBkg: "#27272a",
+    subgraphBkg: "#141417",
+    lineColor: "#d4d4d8",
+  },
+};
+
 export function DiagramStudio() {
   // Studio configuration states
   const [diagramType, setDiagramType] = useState<DiagramType>("flowchart");
   const [prompt, setPrompt] = useState<string>("");
   const [orientation, setOrientation] = useState<FlowchartOrientation>("TD");
   const [complexity, setComplexity] = useState<ComplexityLevel>("standard");
+  const [activeTheme, setActiveTheme] = useState<DiagramThemeId>("cyberpunk");
 
   // Code and tree states
   const [mermaidCode, setMermaidCode] = useState<string>(SAMPLE_DIAGRAMS.flowcharts[0].code);
@@ -73,7 +170,7 @@ export function DiagramStudio() {
   const [selectedNode, setSelectedNode] = useState<{ id: string; label: string } | null>(null);
   const [expandPrompt, setExpandPrompt] = useState<string>("");
 
-  // Viewport states
+  // Viewport states (unlimited zoom range 0.002x to 250x)
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -96,34 +193,6 @@ export function DiagramStudio() {
 
   // Initialize Mermaid on mount
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: "loose",
-      theme: "base",
-      themeVariables: {
-        darkMode: true,
-        background: "transparent",
-        mainBkg: "#18181d",
-        nodeBorder: "#ec4899",
-        clusterBkg: "#141418",
-        clusterBorder: "#3f3f46",
-        titleColor: "#ffffff",
-        textColor: "#f4f4f5",
-        lineColor: "#ec4899",
-        primaryColor: "#27272a",
-        primaryTextColor: "#ffffff",
-        primaryBorderColor: "#ec4899",
-        secondaryColor: "#1f1f23",
-        secondaryTextColor: "#e4e4e7",
-        secondaryBorderColor: "#db2777",
-        tertiaryColor: "#16161a",
-        tertiaryTextColor: "#d4d4d8",
-        tertiaryBorderColor: "#3f3f46",
-        fontFamily: '"Space Mono", monospace, ui-monospace, sans-serif',
-        fontSize: "13px",
-      },
-    });
-
     // Check localStorage for user-provided key
     const local = localStorage.getItem("vectopus_gemini_api_key") || "";
     if (local) {
@@ -151,51 +220,149 @@ export function DiagramStudio() {
     }
   }, [diagramType, mermaidCode]);
 
-  // Render Mermaid code to SVG with self-healing auto-repair
-  const renderMermaid = useCallback(async (codeToRender: string) => {
-    if (!codeToRender || !codeToRender.trim()) return;
+  // Render Mermaid code to SVG with theme variables, drop-shadow aura, and auto-repair
+  const renderMermaid = useCallback(
+    async (codeToRender: string, themeId: DiagramThemeId = activeTheme) => {
+      if (!codeToRender || !codeToRender.trim()) return;
 
-    // Clean any prior temporary mermaid error elements from document body
-    if (typeof document !== "undefined") {
-      document.querySelectorAll("[id^='dmermaid_diag_']").forEach((el) => el.remove());
-    }
+      const themeConfig = DIAGRAM_THEMES[themeId] || DIAGRAM_THEMES.cyberpunk;
 
-    const sanitized = cleanMermaidCode(codeToRender);
+      try {
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: "loose",
+          theme: "base",
+          themeVariables: {
+            darkMode: true,
+            background: "transparent",
+            mainBkg: themeConfig.nodeBkg,
+            nodeBorder: themeConfig.accent,
+            clusterBkg: themeConfig.subgraphBkg,
+            clusterBorder: themeConfig.border,
+            titleColor: themeConfig.textColor,
+            textColor: themeConfig.textColor,
+            lineColor: themeConfig.lineColor,
+            primaryColor: themeConfig.nodeBkg,
+            primaryTextColor: themeConfig.textColor,
+            primaryBorderColor: themeConfig.accent,
+            secondaryColor: themeConfig.cardBg,
+            secondaryTextColor: themeConfig.textColor,
+            secondaryBorderColor: themeConfig.secondary,
+            tertiaryColor: themeConfig.subgraphBkg,
+            tertiaryTextColor: themeConfig.textColor,
+            tertiaryBorderColor: themeConfig.border,
+            edgeLabelBackground: themeConfig.bg,
+            fontFamily: '"Space Mono", monospace, ui-monospace, sans-serif',
+            fontSize: "13px",
+          },
+        });
+      } catch (initErr) {
+        console.warn("Mermaid initialize error:", initErr);
+      }
 
-    try {
-      setRenderError(null);
-      const uniqueId = `mermaid_diag_${Date.now()}`;
-      const { svg } = await mermaid.render(uniqueId, sanitized);
-      setSvgContent(svg);
-    } catch (err: unknown) {
-      console.warn("Initial Mermaid render failed, attempting auto-repair:", err);
-
-      // Clean up any error DOM elements Mermaid might have appended
+      // Clean any prior temporary mermaid error elements from document body
       if (typeof document !== "undefined") {
         document.querySelectorAll("[id^='dmermaid_diag_']").forEach((el) => el.remove());
       }
 
+      const sanitized = cleanMermaidCode(codeToRender);
+
+      // Post-process SVG with glowing aura filters and modern styles
+      const postProcessSvg = (rawSvg: string): string => {
+        const injectedStyles = `
+<defs>
+  <filter id="diagram-glow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="${themeConfig.glow}" />
+  </filter>
+</defs>
+<style>
+  svg {
+    font-family: "Space Mono", monospace, ui-monospace, sans-serif !important;
+  }
+  .mindmap-node rect,
+  .mindmap-node circle,
+  .mindmap-node polygon,
+  .mindmap-node path:not([class*='edge']) {
+    rx: 8px;
+    ry: 8px;
+    filter: drop-shadow(0 2px 6px ${themeConfig.glow});
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+  }
+  .mindmap-node:hover rect,
+  .mindmap-node:hover circle,
+  .mindmap-node:hover polygon {
+    stroke-width: 2.5px !important;
+    filter: drop-shadow(0 0 14px ${themeConfig.accent});
+  }
+  .node rect,
+  .node circle,
+  .node polygon,
+  .node path {
+    rx: 6px;
+    ry: 6px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+  }
+  .node:hover rect,
+  .node:hover circle,
+  .node:hover polygon {
+    stroke: ${themeConfig.accent} !important;
+    stroke-width: 2.5px !important;
+    filter: drop-shadow(0 0 12px ${themeConfig.glow});
+  }
+  .flowchart-link {
+    stroke: ${themeConfig.lineColor} !important;
+    stroke-width: 1.8px !important;
+  }
+  .cluster rect {
+    rx: 10px;
+    ry: 10px;
+    stroke-dasharray: 4, 4;
+  }
+  text {
+    font-family: "Space Mono", monospace !important;
+  }
+</style>
+`;
+        return rawSvg.replace(/(<svg[^>]*>)/i, `$1${injectedStyles}`);
+      };
+
       try {
-        const repaired = autoRepairMermaid(codeToRender);
-        const uniqueIdRepair = `mermaid_diag_rep_${Date.now()}`;
-        const { svg } = await mermaid.render(uniqueIdRepair, repaired);
-        setSvgContent(svg);
-        setMermaidCode(repaired);
         setRenderError(null);
-      } catch (err2: unknown) {
-        console.error("Auto-repair also failed:", err2);
+        const uniqueId = `mermaid_diag_${Date.now()}`;
+        const { svg } = await mermaid.render(uniqueId, sanitized);
+        setSvgContent(postProcessSvg(svg));
+      } catch (err: unknown) {
+        console.warn("Initial Mermaid render failed, attempting auto-repair:", err);
+
         if (typeof document !== "undefined") {
           document.querySelectorAll("[id^='dmermaid_diag_']").forEach((el) => el.remove());
         }
-        setRenderError(err instanceof Error ? err.message : "Mermaid syntax error");
-      }
-    }
-  }, []);
 
-  // Re-render when mermaidCode changes
+        try {
+          const repaired = autoRepairMermaid(codeToRender);
+          const uniqueIdRepair = `mermaid_diag_rep_${Date.now()}`;
+          const { svg } = await mermaid.render(uniqueIdRepair, repaired);
+          setSvgContent(postProcessSvg(svg));
+          setMermaidCode(repaired);
+          setRenderError(null);
+        } catch (err2: unknown) {
+          console.error("Auto-repair also failed:", err2);
+          if (typeof document !== "undefined") {
+            document.querySelectorAll("[id^='dmermaid_diag_']").forEach((el) => el.remove());
+          }
+          setRenderError(err instanceof Error ? err.message : "Mermaid syntax error");
+        }
+      }
+    },
+    [activeTheme]
+  );
+
+  // Re-render when mermaidCode or activeTheme changes
   useEffect(() => {
-    renderMermaid(mermaidCode);
-  }, [mermaidCode, renderMermaid]);
+    renderMermaid(mermaidCode, activeTheme);
+  }, [mermaidCode, activeTheme, renderMermaid]);
 
   // Flowchart node list for AI expansion
   const flowchartNodes = useMemo(() => {
@@ -390,7 +557,30 @@ export function DiagramStudio() {
     setIsAuthError(false);
   };
 
-  // Zoom and Pan Handlers
+  // Interactive Canvas Node Click Handler
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const nodeEl = target.closest(
+      ".mindmap-node, .node, [id^='flowchart-'], g[class*='node']"
+    ) as HTMLElement | null;
+    if (!nodeEl) return;
+
+    // Extract text from node element
+    const textEls = nodeEl.querySelectorAll("text, div, span");
+    let label = "";
+    textEls.forEach((el) => {
+      const txt = el.textContent?.trim();
+      if (txt && !label.includes(txt)) {
+        label += (label ? " " : "") + txt;
+      }
+    });
+
+    if (label) {
+      setSelectedNode({ id: nodeEl.id || label, label });
+    }
+  };
+
+  // Zoom and Pan Handlers (Unlimited Focal Zoom)
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     setIsDragging(true);
@@ -409,17 +599,56 @@ export function DiagramStudio() {
     setIsDragging(false);
   };
 
+  // Unlimited focal wheel zoom (0.002x to 250x)
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const factor = 1.15;
-    const nextZoom = e.deltaY < 0 ? zoom * factor : zoom / factor;
-    setZoom(Math.min(5, Math.max(0.2, nextZoom)));
+    if (!canvasContainerRef.current) return;
+
+    const rect = canvasContainerRef.current.getBoundingClientRect();
+    const mouseRelX = e.clientX - (rect.left + rect.width / 2);
+    const mouseRelY = e.clientY - (rect.top + rect.height / 2);
+
+    const factor = e.deltaY < 0 ? 1.18 : 1 / 1.18;
+    // Range: 0.002 (0.2%) up to 250 (25,000%)
+    const nextZoom = Math.min(250, Math.max(0.002, zoom * factor));
+
+    if (Math.abs(nextZoom - zoom) > 0.00001) {
+      const ratio = nextZoom / zoom;
+      setPan((prev) => ({
+        x: mouseRelX - (mouseRelX - prev.x) * ratio,
+        y: mouseRelY - (mouseRelY - prev.y) * ratio,
+      }));
+      setZoom(nextZoom);
+    }
   };
 
-  const adjustZoom = (type: "in" | "out" | "reset" | "fit") => {
-    if (type === "in") setZoom((z) => Math.min(5, z * 1.3));
-    else if (type === "out") setZoom((z) => Math.max(0.2, z / 1.3));
-    else if (type === "fit") {
+  const adjustZoom = (type: "in" | "out" | "reset" | "fit" | number) => {
+    if (typeof type === "number") {
+      setZoom(Math.min(250, Math.max(0.002, type)));
+      return;
+    }
+    if (type === "in") {
+      setZoom((z) => Math.min(250, z * 1.35));
+    } else if (type === "out") {
+      setZoom((z) => Math.max(0.002, z / 1.35));
+    } else if (type === "fit") {
+      if (svgWrapperRef.current && canvasContainerRef.current) {
+        const svgEl = svgWrapperRef.current.querySelector("svg");
+        const contRect = canvasContainerRef.current.getBoundingClientRect();
+        if (svgEl && contRect.width > 0 && contRect.height > 0) {
+          const svgBox = svgEl.getBoundingClientRect();
+          const curW = svgBox.width / (zoom || 1);
+          const curH = svgBox.height / (zoom || 1);
+          if (curW > 0 && curH > 0) {
+            const fitW = (contRect.width - 60) / curW;
+            const fitH = (contRect.height - 60) / curH;
+            const fitZoom = Math.min(fitW, fitH, 1.2);
+            setZoom(Math.max(0.01, fitZoom));
+            setPan({ x: 0, y: 0 });
+            return;
+          }
+        }
+      }
       setZoom(0.85);
       setPan({ x: 0, y: 0 });
     } else {
@@ -475,8 +704,9 @@ export function DiagramStudio() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Dark canvas background matching theme
-    ctx.fillStyle = "#121212";
+    // Background matching active theme
+    const themeConfig = DIAGRAM_THEMES[activeTheme] || DIAGRAM_THEMES.cyberpunk;
+    ctx.fillStyle = themeConfig.bg || "#09090b";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const svgBlob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
@@ -931,58 +1161,119 @@ export function DiagramStudio() {
         {/* Right Sandbox Viewport */}
         <section className="lg:col-span-8 flex flex-col bg-background overflow-hidden relative">
           {/* Viewport Toolbar */}
-          <div className="border-b border-border/40 px-6 py-3 bg-card/20 flex flex-wrap items-center justify-between gap-4 z-10">
-            {/* View Tabs */}
-            <div className="flex items-center gap-1 bg-background p-0.5 rounded-[8px] border border-border/40">
-              {(
-                [
-                  { id: "diagram", label: "Interactive Diagram" },
-                  { id: "mermaid", label: "Mermaid Code" },
-                  { id: "svg", label: "SVG Source" },
-                ] as const
-              ).map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-1.5 rounded-[6px] text-xs font-mono transition-colors ${
-                    activeTab === tab.id
-                      ? "bg-pink text-pink-foreground font-bold"
-                      : "text-muted-foreground hover:text-white"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+          <div className="border-b border-border/40 px-4 sm:px-6 py-2.5 bg-card/20 flex flex-wrap items-center justify-between gap-3 z-10">
+            {/* View Tabs & Theme Switcher */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* View Tabs */}
+              <div className="flex items-center gap-1 bg-background p-0.5 rounded-[8px] border border-border/40">
+                {(
+                  [
+                    { id: "diagram", label: "Diagram" },
+                    { id: "mermaid", label: "Mermaid" },
+                    { id: "svg", label: "SVG" },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-3 py-1.5 rounded-[6px] text-xs font-mono transition-colors ${
+                      activeTab === tab.id
+                        ? "bg-pink text-pink-foreground font-bold shadow-sm"
+                        : "text-muted-foreground hover:text-white"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Theme Switcher Dots */}
+              <div className="flex items-center gap-1 bg-background p-0.5 rounded-[8px] border border-border/40">
+                {(
+                  [
+                    { id: "cyberpunk", label: "Cyberpunk", dot: "#ec4899" },
+                    { id: "matrix", label: "Matrix", dot: "#10b981" },
+                    { id: "sapphire", label: "Sapphire", dot: "#3b82f6" },
+                    { id: "amber", label: "Amber", dot: "#f59e0b" },
+                    { id: "monochrome", label: "Mono", dot: "#e4e4e7" },
+                  ] as const
+                ).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTheme(t.id)}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-[5px] text-[11px] font-mono transition-all ${
+                      activeTheme === t.id
+                        ? "bg-card text-white border border-border/60 shadow-sm font-bold"
+                        : "text-muted-foreground hover:text-white hover:bg-card/40"
+                    }`}
+                    title={`${t.label} Theme`}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full inline-block"
+                      style={{
+                        backgroundColor: t.dot,
+                        boxShadow: activeTheme === t.id ? `0 0 6px ${t.dot}` : "none",
+                      }}
+                    />
+                    <span className="hidden xl:inline">{t.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Viewport Controls */}
+            {/* Viewport Zoom Controls */}
             <div className="flex items-center gap-2">
-              {/* Zoom Controls */}
+              {/* Zoom Buttons & Readout */}
               <div className="flex items-center gap-1 bg-background p-0.5 rounded-[6px] border border-border/30">
                 <button
                   onClick={() => adjustZoom("out")}
                   className="p-1.5 rounded-[4px] text-muted-foreground hover:text-white transition-colors"
-                  title="Zoom Out"
+                  title="Zoom Out (or scroll mouse wheel)"
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
                 </button>
-                <span className="text-[11px] font-mono min-w-[45px] text-center text-white">
-                  {Math.round(zoom * 100)}%
+                <span
+                  onClick={() => adjustZoom("reset")}
+                  className="text-[11px] font-mono min-w-[50px] text-center text-white cursor-pointer hover:text-pink transition-colors px-1"
+                  title="Click to reset to 100%"
+                >
+                  {zoom >= 10
+                    ? `${Math.round(zoom * 100)}%`
+                    : zoom < 0.1
+                    ? `${(zoom * 100).toFixed(1)}%`
+                    : `${Math.round(zoom * 100)}%`}
                 </span>
                 <button
                   onClick={() => adjustZoom("in")}
                   className="p-1.5 rounded-[4px] text-muted-foreground hover:text-white transition-colors"
-                  title="Zoom In"
+                  title="Zoom In (or scroll mouse wheel)"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => adjustZoom("reset")}
-                  className="px-2 py-1 rounded-[4px] text-[10px] font-mono text-muted-foreground hover:text-white transition-colors"
-                  title="Reset Zoom"
+                  onClick={() => adjustZoom("fit")}
+                  className="px-2 py-1 rounded-[4px] text-[10px] font-mono text-muted-foreground hover:text-white hover:bg-card/60 transition-colors"
+                  title="Fit diagram to viewport"
                 >
-                  100%
+                  Fit
                 </button>
+              </div>
+
+              {/* Quick Zoom Presets */}
+              <div className="hidden lg:flex items-center gap-0.5 bg-background p-0.5 rounded-[6px] border border-border/30 text-[10px] font-mono">
+                {[0.5, 1, 2, 5, 10].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => adjustZoom(preset)}
+                    className={`px-1.5 py-0.5 rounded-[3px] transition-colors ${
+                      Math.abs(zoom - preset) < 0.05
+                        ? "bg-pink/20 text-pink border border-pink/40 font-bold"
+                        : "text-muted-foreground hover:text-white"
+                    }`}
+                  >
+                    {preset * 100}%
+                  </button>
+                ))}
               </div>
 
               {/* Fullscreen Toggle */}
@@ -1014,20 +1305,63 @@ export function DiagramStudio() {
               }`}
             >
               {/* Floating Helper Tip */}
-              <div className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-[6px] border border-border/30 text-[9px] font-mono text-muted-foreground pointer-events-none flex items-center gap-2">
+              <div className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-black/70 backdrop-blur-md rounded-[6px] border border-border/30 text-[9px] font-mono text-muted-foreground pointer-events-none flex items-center gap-2 shadow-lg">
                 <Info className="w-3 h-3 text-pink" />
-                Drag canvas to pan · Scroll to zoom
+                <span>Drag to pan · Unlimited focal zoom · Click node to expand</span>
               </div>
 
               {/* Diagram Title Banner */}
-              <div className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-[6px] border border-border/30 text-[10px] font-mono text-white pointer-events-none flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-pink animate-pulse" />
+              <div className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-black/70 backdrop-blur-md rounded-[6px] border border-border/30 text-[10px] font-mono text-white pointer-events-none flex items-center gap-2 shadow-lg">
+                <span
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{ backgroundColor: DIAGRAM_THEMES[activeTheme].accent }}
+                />
                 {diagramTitle}
               </div>
 
+              {/* Floating Node Selection Action Bar */}
+              {selectedNode && (
+                <div className="absolute bottom-4 left-4 z-10 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-[8px] border border-pink/40 text-[11px] font-mono text-white flex items-center gap-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
+                  <Sparkles className="w-3.5 h-3.5 text-pink animate-pulse" />
+                  <span className="truncate max-w-[200px] text-muted-foreground">
+                    Selected: <strong className="text-white">{selectedNode.label}</strong>
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAiExpandNode();
+                    }}
+                    disabled={isExpandingNode}
+                    className="ml-1 px-2.5 py-1 bg-pink text-pink-foreground rounded-[4px] text-[10px] font-bold uppercase hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-1 shadow-sm"
+                  >
+                    {isExpandingNode ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        Expanding...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 fill-current" />
+                        AI Expand
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedNode(null);
+                    }}
+                    className="ml-1 p-1 text-muted-foreground hover:text-white transition-colors"
+                    title="Deselect"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
               {/* Render Error Overlay */}
               {renderError ? (
-                <div className="p-6 max-w-md bg-destructive/10 border border-destructive/30 rounded-[10px] text-destructive text-xs font-mono space-y-3 z-20">
+                <div className="p-6 max-w-md bg-destructive/10 border border-destructive/30 rounded-[10px] text-destructive text-xs font-mono space-y-3 z-20 shadow-xl">
                   <div className="flex items-center gap-2 font-bold">
                     <AlertCircle className="w-4 h-4" />
                     Mermaid Syntax Error
@@ -1052,7 +1386,10 @@ export function DiagramStudio() {
                 /* Main Scalable SVG Container */
                 <div
                   ref={svgWrapperRef}
-                  className="transition-transform duration-75 ease-out flex items-center justify-center"
+                  onClick={handleCanvasClick}
+                  className={`flex items-center justify-center ${
+                    isDragging ? "transition-none" : "transition-transform duration-75 ease-out"
+                  }`}
                   style={{
                     transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                     transformOrigin: "center center",

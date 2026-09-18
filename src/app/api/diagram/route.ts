@@ -123,20 +123,29 @@ Requirements:
     } else {
       // Standard generation
       if (type === "mindmap") {
-        userPrompt = `You are an expert information architect. Create an expandable, comprehensive Mermaid.js mindmap about:
+        userPrompt = `You are an elite visual information architect and executive diagram designer.
+Create an exceptionally impressive, richly structured Mermaid.js mindmap about:
 "${prompt}"
 
-Complexity level: ${complexity}.
+Complexity level: ${complexity} (make it expansive, deeply insightful, and visually stunning).
 
-Strict Rules for Mermaid Mindmap:
+Strict Rules for an IMPRESSIVE Mermaid Mindmap:
 1. Start with the line: 'mindmap'
-2. Define root node on next line with 2 spaces indent: '  root((Topic Name))'
-3. Indent each subsequent level with 2 spaces.
-4. Provide 3 to 5 main category branches.
-5. Provide 2 to 4 detailed sub-branches under each category.
-6. Provide leaf examples or details under sub-branches (depth of 3 to 4 levels).
-7. Do NOT use unescaped special characters (such as colons, unquoted parens, or backslashes) in labels.
-8. Output ONLY the Mermaid mindmap code block. Do NOT include any explanations or other text.`;
+2. Define the central root with a double circle and a relevant emoji:
+   '  root((🚀 Main Subject Title))'
+3. Provide 4 to 6 primary branches with emojis and rounded or hexagonal shapes:
+   e.g. '    ("⚡ Core Engineering")', '    {{"🔒 Security & Zero-Trust"}}', '    ("🤖 AI & Autonomous Agents")'
+4. Provide 3 to 5 detailed sub-branches under each category with cloud or rounded shapes:
+   e.g. '      )"💡 Distributed Consensus"(' or '      ("Real-time Edge Sync")'
+5. Provide 2 to 4 specific, high-value leaves with square shapes containing concrete metrics, protocols, or tools:
+   e.g. '        ["📌 Raft & Paxos State Machine"]', '        ["⏱️ <5ms P99 Latency SLA"]'
+6. Use diverse shapes across levels:
+   - Root: (("Title"))
+   - Level 1: ("Category") or {{"Category"}}
+   - Level 2: )"Subtopic"( or ("Subtopic")
+   - Level 3+: ["Detail"]
+7. NEVER use raw unquoted colons, backslashes, or unquoted parentheses inside labels.
+8. Output ONLY the raw Mermaid mindmap code block. Do NOT include explanations or markdown outside the code block.`;
       } else {
         // Flowchart
         const complexityGuide =

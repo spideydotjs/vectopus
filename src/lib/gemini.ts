@@ -501,138 +501,204 @@ export const SAMPLE_DIAGRAMS = {
   mindmaps: [
     {
       id: "web-dev-roadmap",
-      title: "Modern Full-Stack Web Development 2026",
-      description: "Comprehensive landscape covering Frontend, Backend, Cloud, and AI Integration.",
+      title: "🚀 Full-Stack AI Engineer 2026",
+      description: "Comprehensive modern architectural landscape covering Frontend, Agentic AI, Cloud, and Zero-Trust Infra.",
       code: `mindmap
-  root((Full-Stack 2026))
-    Frontend
-      React 19 & Next.js 15
-        Server Components
-        Server Actions
-        Streaming SSR
-      Styling & UI
-        Tailwind CSS v4
-        Radix Primitives
-        OKLCH Color Spaces
-      Performance
-        Edge Rendering
-        Partial Prerendering
-        Web Vitals
-    Backend & Systems
-      Runtimes
-        Node.js LTS
-        Bun Runtime
-        Go Microservices
-      Databases
-        PostgreSQL & pgvector
-        Redis Valkey
-        Vector Databases
-      APIs
-        REST & OpenAPI
-        GraphQL
-        tRPC & gRPC
-    AI & Intelligent UI
-      LLM SDKs
-        Google Gemini 2.5
-        Vercel AI SDK
-        Function Calling
-      Vector Search
-        Embeddings
-        Semantic Search
-        Hybrid Retrieval
-    DevOps & Infra
-      Containers
-        Docker & Containerd
-        Kubernetes
-      Cloud Platforms
-        Google Cloud Platform
-        Vercel Edge
-        Cloudflare Workers
-      Observability
-        OpenTelemetry
-        Structured Logging`,
+  root((🚀 Full-Stack AI 2026))
+    ("⚡ Modern Frontend")
+      )"React 19 & Next.js 15"(
+        ["Server Actions & Form Hooks"]
+        ["Streaming SSR & PPR"]
+        ["Turbopack Fast Refresh"]
+      )"Styling & Design System"(
+        ["Tailwind CSS v4 & OKLCH"]
+        ["Radix Accessible Primitives"]
+        ["Dynamic SVG Canvas Shader"]
+      )"Edge & Web Vitals"(
+        ["Cloudflare V8 Isolates"]
+        ["Core Web Vitals INP/LCP"]
+    ("🧠 Agentic AI Architecture")
+      {{"LLM Foundations & Models"}}
+        ["Google Gemini 2.5 Flash/Pro"]
+        ["Anthropic Claude 3.5 Sonnet"]
+        ["Local DeepSeek & Ollama"]
+      {{"Orchestration & Agents"}}
+        ["Autonomous Function Calling"]
+        ["Model Context Protocol (MCP)"]
+        ["Multi-Agent Swarm Networks"]
+      {{"Vector & RAG Systems"}}
+        ["Dense Vector Embeddings"]
+        ["Cross-Encoder Reranking"]
+        ["GraphRAG Semantic Knowledge"]
+    ("🛡️ Zero-Trust Cloud Infra")
+      )"Compute & Containers"(
+        ["Kubernetes & KNative"]
+        ["Serverless GPU Clusters"]
+        ["Docker Distroless Images"]
+      )"Polyglot Persistence"(
+        ["PostgreSQL with pgvector"]
+        ["Redis Valkey High-Speed Cache"]
+        ["Distributed ClickHouse OLAP"]
+      )"Observability & Chaos"(
+        ["OpenTelemetry Traces & Metrics"]
+        ["eBPF Network Profiling"]
+        ["Chaos Engineering Resiliency"]`,
     },
     {
       id: "vectopus-architecture",
-      title: "Vectopus Studio Architecture",
-      description: "Internal architecture of Vectopus image vectorization and diagramming engine.",
+      title: "🐙 Vectopus Vector & Diagram Studio",
+      description: "Deep internal system architecture of Vectopus image vectorization, AI refinement, and diagramming engine.",
       code: `mindmap
-  root((Vectopus Studio))
-    Vector Engine
-      ImageTracerJS Pipeline
-        Color Quantization
-        Edge Detection
-        Path Tracing
-      Smoothing & Splines
-        Bezier Optimization
-        Noise Despeckling
-        Coordinate Rounding
-      Preset Tuning
-        Logo & Silhouette
-        Pixel Art Mode
-        Outline Contours
-    AI Diagram Studio
-      Gemini Engine
-        Flowchart Generator
-        Mindmap Generator
-        Branch Expansion
-      Mermaid Renderer
-        Dark Theme Variables
-        Custom Styling
-        Interactive SVG
-      Collapsible Trees
-        Depth Filtering
-        Branch Folding
-        AI Drill-down
-    Viewport & Canvas
-      Interactive Pan & Zoom
-      Split Screen Curtain
-      Side-by-Side Comparison
-    Export & Output
-      Scalable Vector SVG
-      Retina 2x PNG
-      Source Markup Inspector`,
+  root((🐙 Vectopus Studio))
+    ("🎨 Raster Tracing Pipeline")
+      )"Canvas Preprocessor"(
+        ["Chroma Key Background Eraser"]
+        ["Interactive Eyedropper Color Extraction"]
+        ["Silhouette Binarization Filter"]
+      )"ImageTracerJS Engine"(
+        ["Color Quantization & Palettes"]
+        ["Sub-pixel Edge Detection"]
+        ["Bezier Optimization & Spline Smoothing"]
+      )"Engine Presets"(
+        ["Crisp Logo & Icon Mode"]
+        ["Detailed Gradient Mapping"]
+        ["Retro Pixel-Art Right-Angle Alignment"]
+    ("✨ Gemini AI Refinement")
+      {{"Vector Enhancement"}}
+        ["Path Smoothing & Noise Elimination"]
+        ["Harmonized Modern Color Palettes"]
+        ["Cyberpunk Neon Glow & Gradients"]
+      {{"Markup Optimization"}}
+        ["Semantic SVG Layer Grouping"]
+        ["Path Complexity Reduction"]
+        ["XML Namespace & ViewBox Standardization"]
+    ("⚡ Diagram & Flow Engine")
+      )"Mermaid.js Integration"(
+        ["Self-Healing Syntax Auto-Repair"]
+        ["Real-time Dark OKLCH Theme"]
+        ["Foldable Multi-Depth Mindmaps"]
+      )"Interactive Canvas Viewport"(
+        ["Unlimited 10000% Focal Mouse Zoom"]
+        ["Zero-Friction Pan & Drag"]
+        ["High-Res 2x Retina PNG & SVG Export"]`,
     },
     {
       id: "ai-system-design",
-      title: "AI System Design & LLM Architecture",
-      description: "Design patterns for resilient, scalable production LLM applications.",
+      title: "🧠 Production LLM & Neural Systems Design",
+      description: "Enterprise design patterns for resilient, high-throughput production LLM applications.",
       code: `mindmap
-  root((AI System Design))
-    Model Serving
-      Inference Engines
-        vLLM & TensorRT-LLM
-        Ollama & Local Models
-      Optimizations
-        PagedAttention
-        Quantization AWQ FP8
-        Speculative Decoding
-    Prompt Engineering
-      Context Management
-        Sliding Window
-        Context Compression
-      Techniques
-        Few-Shot Prompting
-        Chain of Thought
-        Structured Outputs
-    Reliability & Safety
-      Guardrails
-        Input Sanitization
-        PII Redaction
-        Hallucination Detection
-      Evaluation
-        Ragas & DeepEval
-        LLM-as-a-Judge
-        Human in the Loop
-    Agents & Workflows
-      Orchestration
-        Multi-Agent Networks
-        Graph-based Routing
-        Memory & Persistence
-      Tools & Execution
-        Code Execution Sandboxes
-        MCP Protocols
-        Web Search APIs`,
+  root((🧠 Production AI Systems))
+    ("🚀 High-Throughput Inference")
+      )"Serving Engines"(
+        ["vLLM with PagedAttention"]
+        ["TensorRT-LLM NVIDIA Kernels"]
+        ["TGI Hugging Face Runtime"]
+      )"Model Optimization"(
+        ["AWQ & FP8 Quantization"]
+        ["Speculative Decoding Verification"]
+        ["Prefix Caching for Multi-Turn Dialog"]
+    ("🛡️ Reliability & Guardrails")
+      {{"Security & Compliance"}}
+        ["LlamaGuard Content Moderation"]
+        ["PII Anonymization & Masking"]
+        ["Prompt Injection Defense Filters"]
+      {{"Evaluation & Testing"}}
+        ["Ragas RAG Triad Metrics"]
+        ["LLM-as-a-Judge Automated Benchmarks"]
+        ["Human-in-the-Loop Feedback Loops"]
+    ("⚡ Autonomous Workflows")
+      )"State & Memory"(
+        ["Hierarchical Context Compression"]
+        ["Persistent Vector Memory Stores"]
+        ["Episodic & Semantic Buffers"]
+      )"Tool Execution"(
+        ["Sandboxed Docker Code Runner"]
+        ["Web Browsing & Scraper Agents"]
+        ["Enterprise SQL Agent with Validation"]`,
+    },
+    {
+      id: "distributed-cloud-arch",
+      title: "🌐 Distributed Cloud & Microservices Mesh",
+      description: "High-scale enterprise distributed architecture with Kafka streaming, gRPC, multi-region Kubernetes, and eBPF.",
+      code: `mindmap
+  root((🌐 Distributed Cloud Architecture))
+    ("⚡ Event Stream Mesh")
+      )"Kafka Cluster 3.6"(
+        ["Partitioning & Consumer Groups"]
+        ["Strict Exactly-Once Semantics EOS"]
+        ["Dead-Letter Topics & Schema Registry"]
+      )"Async gRPC Pipelines"(
+        ["Protobuf v3 Typed Contracts"]
+        ["Multiplexed HTTP/2 Streams"]
+        ["Bi-Directional Event Channels"]
+    ("🛡️ Zero-Trust Security")
+      {{"Identity & Workloads"}}
+        ["mTLS WireGuard Mesh Encryption"]
+        ["OAuth2 / OIDC + JWT Claims"]
+        ["Ephemeral SPIFFE/SPIRE Workload IDs"]
+      {{"WAF & Threat Mitigation"}}
+        ["eBPF Layer 7 Packet Inspection"]
+        ["Adaptive Rate Limiting with Redis Token Bucket"]
+        ["DDoS Scrubbing & Cloudflare Magic Transit"]
+    ("🗄️ Polyglot Persistence")
+      )"Transactional Core"(
+        ["PostgreSQL Aurora Multi-AZ with pgvector"]
+        ["Distributed Spanner Consensus Replication"]
+      )"Cache & Analytical Layer"(
+        ["Redis Valkey In-Memory KV Cluster"]
+        ["ClickHouse Columnar Real-Time Analytics"]
+    ("🚀 Kubernetes Multi-Region")
+      {{"Orchestration Core"}}
+        ["KEDA Event-Driven Horizontal Autoscaling"]
+        ["ArgoCD GitOps Declarative Deployment"]
+        ["Istio Ambient Service Mesh (Zero Sidecar)"]
+      {{"Observability Triad"}}
+        ["OpenTelemetry Unified Tracing & Spans"]
+        ["Prometheus & Grafana Mimir Metrics"]
+        ["Tempo Distributed Trace Search"]`,
+    },
+    {
+      id: "multi-agent-swarm",
+      title: "🤖 Multi-Agent Autonomous Swarm Systems",
+      description: "Next-gen agentic system design featuring cognitive reasoning loops, Model Context Protocol (MCP), and microVM sandboxes.",
+      code: `mindmap
+  root((🤖 Multi-Agent Swarm Systems))
+    ("🧠 Planner & Cognitive Core")
+      )"Hierarchical Task Decomposition"(
+        ["ReAct: Reasoning + Acting Loops"]
+        ["Tree-of-Thoughts Exploration & Pruning"]
+        ["Self-Correction & Automated Reflection"]
+      )"Memory Architecture"(
+        ["Short-Term Working Memory Buffers"]
+        ["Episodic Semantic Long-Term Vector Memory"]
+        ["Summary Memory Context Compression"]
+    ("🛠️ Tool Protocol & Sandbox")
+      {{"Model Context Protocol (MCP)"}}
+        ["Dynamic JSON-RPC Schema Negotiation"]
+        ["Bidirectional Client-Server Tool Dispatch"]
+        ["Resource & Prompt Template Providers"]
+      {{"Isolated Compute Sandboxes"}}
+        ["gVisor & Firecracker MicroVM Execution"]
+        ["Wasm Edge Runtime for Untrusted Code"]
+        ["Ephemeral Dockerized Code Interpreters"]
+    ("🐝 Swarm Collaboration")
+      )"Agent Topologies"(
+        ["Supervisor-Worker Hierarchical Delegation"]
+        ["Peer-to-Peer Consensus Swarm Debate"]
+        ["Specialist Pipeline Handoff Routing"]
+      )"State Coordination"(
+        ["Shared Blackboard State Machine"]
+        ["CRDT Distributed Conflict Resolution"]
+        ["Human-in-the-Loop Interrupt & Approval"]
+    ("📊 Evaluation & Guardrails")
+      {{"Safety Alignment"}}
+        ["Prompt Injection & Jailbreak Filters"]
+        ["Hallucination Grounding Verification"]
+        ["Deterministic JSON Schema Enforcers"]
+      {{"Performance Telemetry"}}
+        ["Token Cost & Latency Budget Tracking"]
+        ["Trajectory Step Quality Evaluation"]
+        ["Automated Regression Test Suites"]`,
     },
   ],
 };
