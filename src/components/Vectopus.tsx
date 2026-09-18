@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { VectopusLogo } from "./VectopusLogo";
+import { DiagramStudio } from "./DiagramStudio";
 import { vectorizePng, type Mode, type Smoothing, type VectorizeOptions } from "@/lib/vectorize";
 import { preprocessImage, type PreprocessOptions } from "@/lib/preprocessor";
 import {
@@ -37,6 +38,17 @@ type ViewMode = "compare" | "split" | "svg-only" | "original";
 type PresetType = "logo" | "detailed" | "silhouette" | "outline" | "pixel" | "custom";
 
 export function Vectopus() {
+  // Studio navigation mode - default to vectorizer
+  const [activeStudio, setActiveStudio] = useState<"vectorizer" | "diagrams">("vectorizer");
+
+  // AI Vector Refine states
+  const [rawSvg, setRawSvg] = useState<string | null>(null);
+  const [isRefining, setIsRefining] = useState<boolean>(false);
+  const [refinePrompt, setRefinePrompt] = useState<string>("");
+  const [refinePreset, setRefinePreset] = useState<"smooth" | "palette" | "cyberpunk" | "minimal" | "enhance">("smooth");
+  const [isRefined, setIsRefined] = useState<boolean>(false);
+  const [refineErr, setRefineErr] = useState<string | null>(null);
+
   // File upload states
   const [file, setFile] = useState<File | null>(null);
   const [pngUrl, setPngUrl] = useState<string | null>(null);
@@ -266,6 +278,8 @@ export function Vectopus() {
       };
       const out = await vectorizePng(preprocessedUrl, opts);
       setSvg(out);
+      setRawSvg(out);
+      setIsRefined(false);
       // Switch view mode to show the result
       setViewMode("split");
     } catch (e) {
@@ -275,17 +289,100 @@ export function Vectopus() {
     }
   };
 
+  const handleAiRefine = async () => {
+    if (!svg) return;
+    setIsRefining(true);
+    setRefineErr(null);
+    try {
+      const res = await fetch("/api/refine-svg", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          svg: rawSvg || svg,
+          prompt: refinePrompt.trim() || undefined,
+          preset: refinePreset,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to refine SVG with AI");
+      }
+      setSvg(data.refinedSvg);
+      setIsRefined(true);
+      setViewMode("split");
+    } catch (e: unknown) {
+      setRefineErr(e instanceof Error ? e.message : "Failed during AI vector refinement.");
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
+  const handleRevertRefine = () => {
+    if (rawSvg) {
+      setSvg(rawSvg);
+      setIsRefined(false);
+    }
+  };
+
   const handleDownload = () => {
     if (!svg || !file) return;
     const blob = new Blob([svg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = file.name.replace(/\.[^/.]+$/, "") + ".svg";
+    a.download = file.name.replace(/\.[^/.]+$/, "") + (isRefined ? "_refined.svg" : ".svg");
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPng = (scale = 2) => {
+    if (!svg || !file) return;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svg, "image/svg+xml");
+    const svgEl = doc.querySelector("svg");
+    if (!svgEl) return;
+
+    let width = parseFloat(svgEl.getAttribute("width") || "0");
+    let height = parseFloat(svgEl.getAttribute("height") || "0");
+    if (!width || !height) {
+      const viewBox = svgEl.getAttribute("viewBox");
+      if (viewBox) {
+        const parts = viewBox.split(/\s+/).map(Number);
+        if (parts.length === 4) {
+          width = parts[2];
+          height = parts[3];
+        }
+      }
+    }
+    if (!width || width <= 0) width = 800;
+    if (!height || height <= 0) height = 600;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#121212";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      const pngUrl = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = pngUrl;
+      a.download = file.name.replace(/\.[^/.]+$/, "") + (isRefined ? "_refined.png" : ".png");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+    img.src = url;
   };
 
   const handleCopyCode = () => {
@@ -349,12 +446,15 @@ export function Vectopus() {
     setLoadedImage(null);
     setPreprocessedUrl(null);
     setSvg(null);
+    setRawSvg(null);
+    setIsRefined(false);
+    setRefineErr(null);
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-pink/20">
       {/* Header */}
-      <header className="border-b border-border/40 backdrop-blur-md bg-background/80 sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-border/40 backdrop-blur-md bg-background/80 sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <VectopusLogo className="h-8 w-8 text-pink animate-pulse" />
           <div>
@@ -365,24 +465,60 @@ export function Vectopus() {
               </span>
             </h1>
             <p className="text-[10px] font-mono text-muted-foreground">
-              professional image to vector studio
+              professional vector &amp; diagram studio
             </p>
           </div>
         </div>
 
-        {file && (
+        {/* Studio Switcher */}
+        <div className="flex items-center bg-card/60 p-1 rounded-[10px] border border-border/40 shadow-inner">
           <button
-            onClick={clearFile}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-mono bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+            type="button"
+            onClick={() => setActiveStudio("vectorizer")}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[7px] text-xs font-mono font-bold transition-all ${
+              activeStudio === "vectorizer"
+                ? "bg-pink text-pink-foreground shadow-sm"
+                : "text-muted-foreground hover:text-white"
+            }`}
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            clear workspace
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>PNG to SVG Vectorizer</span>
           </button>
-        )}
+          <button
+            type="button"
+            onClick={() => setActiveStudio("diagrams")}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[7px] text-xs font-mono font-bold transition-all ${
+              activeStudio === "diagrams"
+                ? "bg-pink text-pink-foreground shadow-sm"
+                : "text-muted-foreground hover:text-white"
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Flowcharts &amp; Mindmaps</span>
+            <span className="text-[9px] px-1.5 py-0.2 bg-white/20 text-white rounded font-mono uppercase tracking-wider">
+              Gemini
+            </span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {activeStudio === "vectorizer" && file && (
+            <button
+              onClick={clearFile}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-mono bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              clear workspace
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Main Studio Area */}
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden h-[calc(100vh-69px)]">
+      {activeStudio === "diagrams" ? (
+        <DiagramStudio />
+      ) : (
+        <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden h-[calc(100vh-69px)]">
         {/* Left Control Sidebar */}
         <section className="lg:col-span-4 border-r border-border/40 p-6 overflow-y-auto space-y-6 flex flex-col bg-card/10">
           {/* File uploader */}
@@ -801,6 +937,107 @@ export function Vectopus() {
                   </>
                 )}
               </button>
+
+              {/* 3. AI Vector Refine with Gemini */}
+              {svg && (
+                <div className="bg-card/40 border border-pink/30 rounded-[10px] p-4 space-y-4 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between border-b border-border/30 pb-2">
+                    <div className="flex items-center gap-2 text-white">
+                      <Sparkles className="w-4 h-4 text-pink animate-pulse" />
+                      <h3 className="text-xs uppercase font-bold tracking-wider font-mono">
+                        3. AI Vector Refine
+                      </h3>
+                    </div>
+                    {isRefined && (
+                      <span className="text-[9px] font-mono px-2 py-0.5 bg-pink/20 text-pink rounded-[4px] font-bold">
+                        AI Refined
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Refine Presets */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+                      Refinement Style
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[
+                        { id: "smooth", label: "Smooth Curves", desc: "Clean jagged contours" },
+                        { id: "palette", label: "Harmonize Palette", desc: "Cohesive color scheme" },
+                        { id: "cyberpunk", label: "Cyberpunk Glow", desc: "Neon & deep gradients" },
+                        { id: "minimal", label: "Geometric Minimal", desc: "Bold icon aesthetics" },
+                        { id: "enhance", label: "Enhanced Clarity", desc: "Semantic layer grouping" },
+                      ].map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setRefinePreset(p.id as any)}
+                          className={`text-left p-2 rounded-[6px] border text-[10px] font-mono transition-all ${
+                            refinePreset === p.id
+                              ? "border-pink bg-pink/10 text-white font-bold"
+                              : "border-border/30 bg-background/50 text-muted-foreground hover:text-white"
+                          }`}
+                        >
+                          <div className="text-white font-bold">{p.label}</div>
+                          <div className="text-[8px] text-muted-foreground">{p.desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Prompt */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+                      Custom AI Guidance (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={refinePrompt}
+                      onChange={(e) => setRefinePrompt(e.target.value)}
+                      placeholder="e.g. Add purple & cyan gradient, soften edges..."
+                      className="w-full bg-background border border-border/40 rounded-[6px] p-2 text-xs font-mono text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-pink"
+                    />
+                  </div>
+
+                  {refineErr && (
+                    <div className="p-2.5 rounded bg-destructive/10 border border-destructive/30 text-destructive text-[10px] font-mono leading-relaxed">
+                      {refineErr}
+                    </div>
+                  )}
+
+                  {/* Refine Actions */}
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={handleAiRefine}
+                      disabled={isRefining}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-[8px] bg-pink text-pink-foreground hover:opacity-95 disabled:opacity-50 transition-all font-bold uppercase tracking-wider text-xs font-mono shadow-[0_2px_15px_rgba(236,72,153,0.25)]"
+                    >
+                      {isRefining ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          refining vector with gemini...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 fill-current" />
+                          {isRefined ? "re-refine with gemini" : "refine vector with gemini"}
+                        </>
+                      )}
+                    </button>
+
+                    {isRefined && (
+                      <button
+                        type="button"
+                        onClick={handleRevertRefine}
+                        className="w-full py-1.5 text-[10px] font-mono text-muted-foreground hover:text-white border border-border/30 rounded-[6px] hover:bg-card/40 transition-colors"
+                      >
+                        ↩ Revert to Raw Traced SVG
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -1027,8 +1264,13 @@ export function Vectopus() {
                       </div>
 
                       <div className="p-3 bg-background border border-border/30 rounded-[8px] font-mono">
-                        <div className="text-[9px] uppercase tracking-wider text-pink mb-0.5">
-                          Vector SVG Size
+                        <div className="text-[9px] uppercase tracking-wider text-pink mb-0.5 flex items-center justify-between">
+                          <span>Vector SVG Size</span>
+                          {isRefined && (
+                            <span className="text-[8px] bg-pink/20 text-pink px-1 py-0.2 rounded font-bold">
+                              AI REFINED
+                            </span>
+                          )}
                         </div>
                         <div className="text-sm font-bold text-pink">{formatBytes(svgSize)}</div>
                       </div>
@@ -1058,7 +1300,7 @@ export function Vectopus() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setShowCode(!showCode)}
-                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-[8px] text-xs font-mono border transition-all ${
+                        className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-[8px] text-xs font-mono border transition-all ${
                           showCode
                             ? "bg-pink/10 border-pink text-pink"
                             : "bg-card border-border/40 text-muted-foreground hover:text-white"
@@ -1070,10 +1312,20 @@ export function Vectopus() {
 
                       <button
                         onClick={handleDownload}
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-[8px] text-xs font-mono bg-white text-background hover:bg-white/90 transition-colors font-bold"
+                        className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-[8px] text-xs font-mono border border-border/40 bg-card hover:bg-card/80 text-white transition-colors font-bold"
+                        title="Download Scalable Vector Graphics (.svg)"
                       >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-4 h-4 text-pink" />
                         download svg
+                      </button>
+
+                      <button
+                        onClick={() => handleDownloadPng(2)}
+                        className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-[8px] text-xs font-mono bg-pink text-pink-foreground hover:opacity-95 transition-all font-bold shadow-[0_2px_15px_rgba(236,72,153,0.3)]"
+                        title="Download High-Resolution PNG (2x Retina)"
+                      >
+                        <Download className="w-4 h-4 fill-current" />
+                        download png
                       </button>
                     </div>
                   </div>
@@ -1115,6 +1367,7 @@ export function Vectopus() {
           )}
         </section>
       </main>
+    )}
 
       {/* Progress Line */}
       {isTracing && (
