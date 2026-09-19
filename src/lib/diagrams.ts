@@ -1,6 +1,6 @@
 /**
  * Utilities for Mermaid diagram generation, parsing, tree manipulation,
- * and Gemini prompt construction.
+ * and AI prompt construction.
  */
 
 export interface MindmapTreeNode {
@@ -464,8 +464,8 @@ export const SAMPLE_DIAGRAMS = {
   subgraph Generation ["3. Synthesis & Verification"]
     TopK --> PromptBuilder["System & Grounded Context Builder"]
     UserQuery --> PromptBuilder
-    PromptBuilder --> GeminiLLM["Gemini 2.5 Pro / Flash"]
-    GeminiLLM --> HallucinationGuard{"Factuality & Grounding Check"}
+    PromptBuilder --> CoderLLM["Qwen 2.5 Coder Model"]
+    CoderLLM --> HallucinationGuard{"Factuality & Grounding Check"}
     HallucinationGuard -->|Passed| FinalResponse(["Answer with Source Citations"])
     HallucinationGuard -->|Failed| RefineQuery["Fallback or Clarification Request"]
   end`,
@@ -501,11 +501,11 @@ export const SAMPLE_DIAGRAMS = {
   mindmaps: [
     {
       id: "web-dev-roadmap",
-      title: "🚀 Full-Stack AI Engineer 2026",
+      title: "Full-Stack AI Engineer Architecture",
       description: "Comprehensive modern architectural landscape covering Frontend, Agentic AI, Cloud, and Zero-Trust Infra.",
       code: `mindmap
-  root((🚀 Full-Stack AI 2026))
-    ("⚡ Modern Frontend")
+  root((Full-Stack AI System))
+    ("Modern Frontend")
       )"React 19 & Next.js 15"(
         ["Server Actions & Form Hooks"]
         ["Streaming SSR & PPR"]
@@ -516,21 +516,21 @@ export const SAMPLE_DIAGRAMS = {
         ["Dynamic SVG Canvas Shader"]
       )"Edge & Web Vitals"(
         ["Cloudflare V8 Isolates"]
-        ["Core Web Vitals INP/LCP"]
-    ("🧠 Agentic AI Architecture")
+        ["Core Web Vitals INP and LCP"]
+    ("Agentic AI Architecture")
       {{"LLM Foundations & Models"}}
-        ["Google Gemini 2.5 Flash/Pro"]
-        ["Anthropic Claude 3.5 Sonnet"]
-        ["Local DeepSeek & Ollama"]
+        ["Qwen 2.5 Coder & Ollama"]
+        ["DeepSeek & Open Weights"]
+        ["Local High-Speed Inference"]
       {{"Orchestration & Agents"}}
         ["Autonomous Function Calling"]
-        ["Model Context Protocol (MCP)"]
+        ["Model Context Protocol MCP"]
         ["Multi-Agent Swarm Networks"]
       {{"Vector & RAG Systems"}}
         ["Dense Vector Embeddings"]
         ["Cross-Encoder Reranking"]
         ["GraphRAG Semantic Knowledge"]
-    ("🛡️ Zero-Trust Cloud Infra")
+    ("Zero-Trust Cloud Infra")
       )"Compute & Containers"(
         ["Kubernetes & KNative"]
         ["Serverless GPU Clusters"]
@@ -546,11 +546,11 @@ export const SAMPLE_DIAGRAMS = {
     },
     {
       id: "vectopus-architecture",
-      title: "🐙 Vectopus Vector & Diagram Studio",
+      title: "Vectopus Vector & Diagram Studio",
       description: "Deep internal system architecture of Vectopus image vectorization, AI refinement, and diagramming engine.",
       code: `mindmap
-  root((🐙 Vectopus Studio))
-    ("🎨 Raster Tracing Pipeline")
+  root((Vectopus Studio))
+    ("Raster Tracing Pipeline")
       )"Canvas Preprocessor"(
         ["Chroma Key Background Eraser"]
         ["Interactive Eyedropper Color Extraction"]
@@ -563,7 +563,7 @@ export const SAMPLE_DIAGRAMS = {
         ["Crisp Logo & Icon Mode"]
         ["Detailed Gradient Mapping"]
         ["Retro Pixel-Art Right-Angle Alignment"]
-    ("✨ Gemini AI Refinement")
+    ("Ollama AI Refinement")
       {{"Vector Enhancement"}}
         ["Path Smoothing & Noise Elimination"]
         ["Harmonized Modern Color Palettes"]
@@ -572,23 +572,23 @@ export const SAMPLE_DIAGRAMS = {
         ["Semantic SVG Layer Grouping"]
         ["Path Complexity Reduction"]
         ["XML Namespace & ViewBox Standardization"]
-    ("⚡ Diagram & Flow Engine")
+    ("Diagram & Flow Engine")
       )"Mermaid.js Integration"(
         ["Self-Healing Syntax Auto-Repair"]
         ["Real-time Dark OKLCH Theme"]
         ["Foldable Multi-Depth Mindmaps"]
       )"Interactive Canvas Viewport"(
-        ["Unlimited 10000% Focal Mouse Zoom"]
+        ["Unlimited 25000% Focal Mouse Zoom"]
         ["Zero-Friction Pan & Drag"]
         ["High-Res 2x Retina PNG & SVG Export"]`,
     },
     {
       id: "ai-system-design",
-      title: "🧠 Production LLM & Neural Systems Design",
+      title: "Production LLM & Neural Systems Design",
       description: "Enterprise design patterns for resilient, high-throughput production LLM applications.",
       code: `mindmap
-  root((🧠 Production AI Systems))
-    ("🚀 High-Throughput Inference")
+  root((Production AI Systems))
+    ("High-Throughput Inference")
       )"Serving Engines"(
         ["vLLM with PagedAttention"]
         ["TensorRT-LLM NVIDIA Kernels"]
@@ -597,7 +597,7 @@ export const SAMPLE_DIAGRAMS = {
         ["AWQ & FP8 Quantization"]
         ["Speculative Decoding Verification"]
         ["Prefix Caching for Multi-Turn Dialog"]
-    ("🛡️ Reliability & Guardrails")
+    ("Reliability & Guardrails")
       {{"Security & Compliance"}}
         ["LlamaGuard Content Moderation"]
         ["PII Anonymization & Masking"]
@@ -606,7 +606,7 @@ export const SAMPLE_DIAGRAMS = {
         ["Ragas RAG Triad Metrics"]
         ["LLM-as-a-Judge Automated Benchmarks"]
         ["Human-in-the-Loop Feedback Loops"]
-    ("⚡ Autonomous Workflows")
+    ("Autonomous Workflows")
       )"State & Memory"(
         ["Hierarchical Context Compression"]
         ["Persistent Vector Memory Stores"]
@@ -618,11 +618,11 @@ export const SAMPLE_DIAGRAMS = {
     },
     {
       id: "distributed-cloud-arch",
-      title: "🌐 Distributed Cloud & Microservices Mesh",
+      title: "Distributed Cloud & Microservices Mesh",
       description: "High-scale enterprise distributed architecture with Kafka streaming, gRPC, multi-region Kubernetes, and eBPF.",
       code: `mindmap
-  root((🌐 Distributed Cloud Architecture))
-    ("⚡ Event Stream Mesh")
+  root((Distributed Cloud Architecture))
+    ("Event Stream Mesh")
       )"Kafka Cluster 3.6"(
         ["Partitioning & Consumer Groups"]
         ["Strict Exactly-Once Semantics EOS"]
@@ -631,7 +631,7 @@ export const SAMPLE_DIAGRAMS = {
         ["Protobuf v3 Typed Contracts"]
         ["Multiplexed HTTP/2 Streams"]
         ["Bi-Directional Event Channels"]
-    ("🛡️ Zero-Trust Security")
+    ("Zero-Trust Security")
       {{"Identity & Workloads"}}
         ["mTLS WireGuard Mesh Encryption"]
         ["OAuth2 / OIDC + JWT Claims"]
@@ -640,18 +640,18 @@ export const SAMPLE_DIAGRAMS = {
         ["eBPF Layer 7 Packet Inspection"]
         ["Adaptive Rate Limiting with Redis Token Bucket"]
         ["DDoS Scrubbing & Cloudflare Magic Transit"]
-    ("🗄️ Polyglot Persistence")
+    ("Polyglot Persistence")
       )"Transactional Core"(
         ["PostgreSQL Aurora Multi-AZ with pgvector"]
         ["Distributed Spanner Consensus Replication"]
       )"Cache & Analytical Layer"(
         ["Redis Valkey In-Memory KV Cluster"]
         ["ClickHouse Columnar Real-Time Analytics"]
-    ("🚀 Kubernetes Multi-Region")
+    ("Kubernetes Multi-Region")
       {{"Orchestration Core"}}
         ["KEDA Event-Driven Horizontal Autoscaling"]
         ["ArgoCD GitOps Declarative Deployment"]
-        ["Istio Ambient Service Mesh (Zero Sidecar)"]
+        ["Istio Ambient Service Mesh Zero Sidecar"]
       {{"Observability Triad"}}
         ["OpenTelemetry Unified Tracing & Spans"]
         ["Prometheus & Grafana Mimir Metrics"]
@@ -659,11 +659,11 @@ export const SAMPLE_DIAGRAMS = {
     },
     {
       id: "multi-agent-swarm",
-      title: "🤖 Multi-Agent Autonomous Swarm Systems",
+      title: "Multi-Agent Autonomous Swarm Systems",
       description: "Next-gen agentic system design featuring cognitive reasoning loops, Model Context Protocol (MCP), and microVM sandboxes.",
       code: `mindmap
-  root((🤖 Multi-Agent Swarm Systems))
-    ("🧠 Planner & Cognitive Core")
+  root((Multi-Agent Swarm Systems))
+    ("Planner & Cognitive Core")
       )"Hierarchical Task Decomposition"(
         ["ReAct: Reasoning + Acting Loops"]
         ["Tree-of-Thoughts Exploration & Pruning"]
@@ -672,8 +672,8 @@ export const SAMPLE_DIAGRAMS = {
         ["Short-Term Working Memory Buffers"]
         ["Episodic Semantic Long-Term Vector Memory"]
         ["Summary Memory Context Compression"]
-    ("🛠️ Tool Protocol & Sandbox")
-      {{"Model Context Protocol (MCP)"}}
+    ("Tool Protocol & Sandbox")
+      {{"Model Context Protocol MCP"}}
         ["Dynamic JSON-RPC Schema Negotiation"]
         ["Bidirectional Client-Server Tool Dispatch"]
         ["Resource & Prompt Template Providers"]
@@ -681,7 +681,7 @@ export const SAMPLE_DIAGRAMS = {
         ["gVisor & Firecracker MicroVM Execution"]
         ["Wasm Edge Runtime for Untrusted Code"]
         ["Ephemeral Dockerized Code Interpreters"]
-    ("🐝 Swarm Collaboration")
+    ("Swarm Collaboration")
       )"Agent Topologies"(
         ["Supervisor-Worker Hierarchical Delegation"]
         ["Peer-to-Peer Consensus Swarm Debate"]
@@ -690,7 +690,7 @@ export const SAMPLE_DIAGRAMS = {
         ["Shared Blackboard State Machine"]
         ["CRDT Distributed Conflict Resolution"]
         ["Human-in-the-Loop Interrupt & Approval"]
-    ("📊 Evaluation & Guardrails")
+    ("Evaluation & Guardrails")
       {{"Safety Alignment"}}
         ["Prompt Injection & Jailbreak Filters"]
         ["Hallucination Grounding Verification"]

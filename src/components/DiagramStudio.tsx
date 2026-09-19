@@ -18,7 +18,6 @@ import {
   RotateCcw,
   FileCode,
   Layers,
-  Key,
   RefreshCw,
   FolderTree,
   ChevronRight,
@@ -26,9 +25,14 @@ import {
   Info,
   Sliders,
   AlertCircle,
-  ExternalLink,
-  Save,
   ArrowRight,
+  Sun,
+  Moon,
+  Presentation,
+  Type,
+  Cpu,
+  Server,
+  X,
 } from "lucide-react";
 import {
   MindmapTreeNode,
@@ -42,13 +46,28 @@ import {
   setTreeCollapseByDepth,
   toggleNodeCollapseInTree,
   treeToMindmap,
-} from "@/lib/gemini";
+} from "@/lib/diagrams";
 
 type DiagramType = "flowchart" | "mindmap";
 type FlowchartOrientation = "TD" | "LR";
 type ComplexityLevel = "overview" | "standard" | "deep";
 
 export type DiagramThemeId = "cyberpunk" | "matrix" | "sapphire" | "amber" | "monochrome";
+export type DiagramColorMode = "dark" | "light";
+
+export interface DiagramThemePalette {
+  canvasBg: string;
+  canvasDot: string;
+  cardBg: string;
+  border: string;
+  hoverBorder: string;
+  textColor: string;
+  mutedText: string;
+  nodeBkg: string;
+  subgraphBkg: string;
+  lineColor: string;
+  accent: string;
+}
 
 export interface DiagramThemeConfig {
   id: DiagramThemeId;
@@ -56,14 +75,8 @@ export interface DiagramThemeConfig {
   dotColor: string;
   accent: string;
   secondary: string;
-  glow: string;
-  bg: string;
-  cardBg: string;
-  border: string;
-  textColor: string;
-  nodeBkg: string;
-  subgraphBkg: string;
-  lineColor: string;
+  dark: DiagramThemePalette;
+  light: DiagramThemePalette;
 }
 
 export const DIAGRAM_THEMES: Record<DiagramThemeId, DiagramThemeConfig> = {
@@ -73,14 +86,32 @@ export const DIAGRAM_THEMES: Record<DiagramThemeId, DiagramThemeConfig> = {
     dotColor: "#ec4899",
     accent: "#ec4899",
     secondary: "#06b6d4",
-    glow: "rgba(236, 72, 153, 0.4)",
-    bg: "#09090b",
-    cardBg: "#121217",
-    border: "#27272a",
-    textColor: "#fafafa",
-    nodeBkg: "#18181f",
-    subgraphBkg: "#111116",
-    lineColor: "#ec4899",
+    dark: {
+      canvasBg: "#09090b",
+      canvasDot: "#27272a",
+      cardBg: "#131318",
+      border: "#2a2a30",
+      hoverBorder: "#ec4899",
+      textColor: "#f4f4f5",
+      mutedText: "#a1a1aa",
+      nodeBkg: "#1a1a22",
+      subgraphBkg: "#111116",
+      lineColor: "#52525b",
+      accent: "#ec4899",
+    },
+    light: {
+      canvasBg: "#faf7f9",
+      canvasDot: "#e0d5db",
+      cardBg: "#ffffff",
+      border: "#e5dee2",
+      hoverBorder: "#ec4899",
+      textColor: "#18181b",
+      mutedText: "#71717a",
+      nodeBkg: "#ffffff",
+      subgraphBkg: "#fdf2f8",
+      lineColor: "#64748b",
+      accent: "#db2777",
+    },
   },
   matrix: {
     id: "matrix",
@@ -88,14 +119,32 @@ export const DIAGRAM_THEMES: Record<DiagramThemeId, DiagramThemeConfig> = {
     dotColor: "#10b981",
     accent: "#10b981",
     secondary: "#34d399",
-    glow: "rgba(16, 185, 129, 0.4)",
-    bg: "#050a06",
-    cardBg: "#0a130c",
-    border: "#1c3823",
-    textColor: "#dcfce7",
-    nodeBkg: "#0f1d12",
-    subgraphBkg: "#081009",
-    lineColor: "#10b981",
+    dark: {
+      canvasBg: "#060b07",
+      canvasDot: "#17271b",
+      cardBg: "#0c150e",
+      border: "#1e3524",
+      hoverBorder: "#10b981",
+      textColor: "#dcfce7",
+      mutedText: "#86efac",
+      nodeBkg: "#121d14",
+      subgraphBkg: "#0a120b",
+      lineColor: "#4b5563",
+      accent: "#10b981",
+    },
+    light: {
+      canvasBg: "#f0fdf4",
+      canvasDot: "#bbf7d0",
+      cardBg: "#ffffff",
+      border: "#dcfce7",
+      hoverBorder: "#10b981",
+      textColor: "#064e3b",
+      mutedText: "#047857",
+      nodeBkg: "#ffffff",
+      subgraphBkg: "#f0fdf4",
+      lineColor: "#64748b",
+      accent: "#059669",
+    },
   },
   sapphire: {
     id: "sapphire",
@@ -103,14 +152,32 @@ export const DIAGRAM_THEMES: Record<DiagramThemeId, DiagramThemeConfig> = {
     dotColor: "#3b82f6",
     accent: "#3b82f6",
     secondary: "#38bdf8",
-    glow: "rgba(59, 130, 246, 0.4)",
-    bg: "#070b19",
-    cardBg: "#0c152e",
-    border: "#1e293b",
-    textColor: "#f0f9ff",
-    nodeBkg: "#0f1f42",
-    subgraphBkg: "#091326",
-    lineColor: "#38bdf8",
+    dark: {
+      canvasBg: "#070b19",
+      canvasDot: "#16203a",
+      cardBg: "#0e1830",
+      border: "#1e293b",
+      hoverBorder: "#38bdf8",
+      textColor: "#f0f9ff",
+      mutedText: "#7dd3fc",
+      nodeBkg: "#122044",
+      subgraphBkg: "#0b1528",
+      lineColor: "#475569",
+      accent: "#38bdf8",
+    },
+    light: {
+      canvasBg: "#f0f9ff",
+      canvasDot: "#bae6fd",
+      cardBg: "#ffffff",
+      border: "#e0f2fe",
+      hoverBorder: "#0284c7",
+      textColor: "#0c4a6e",
+      mutedText: "#0369a1",
+      nodeBkg: "#ffffff",
+      subgraphBkg: "#f8fafc",
+      lineColor: "#64748b",
+      accent: "#0284c7",
+    },
   },
   amber: {
     id: "amber",
@@ -118,39 +185,97 @@ export const DIAGRAM_THEMES: Record<DiagramThemeId, DiagramThemeConfig> = {
     dotColor: "#f59e0b",
     accent: "#f59e0b",
     secondary: "#f43f5e",
-    glow: "rgba(245, 158, 11, 0.4)",
-    bg: "#120e0a",
-    cardBg: "#1c140d",
-    border: "#3d2b17",
-    textColor: "#fef3c7",
-    nodeBkg: "#261a0f",
-    subgraphBkg: "#170f08",
-    lineColor: "#f59e0b",
+    dark: {
+      canvasBg: "#120e0a",
+      canvasDot: "#2c2014",
+      cardBg: "#1e160f",
+      border: "#3d2b17",
+      hoverBorder: "#f59e0b",
+      textColor: "#fef3c7",
+      mutedText: "#fde68a",
+      nodeBkg: "#281c12",
+      subgraphBkg: "#1a120a",
+      lineColor: "#52525b",
+      accent: "#f59e0b",
+    },
+    light: {
+      canvasBg: "#fffbeb",
+      canvasDot: "#fde68a",
+      cardBg: "#ffffff",
+      border: "#fef3c7",
+      hoverBorder: "#d97706",
+      textColor: "#78350f",
+      mutedText: "#b45309",
+      nodeBkg: "#ffffff",
+      subgraphBkg: "#fffbeb",
+      lineColor: "#64748b",
+      accent: "#d97706",
+    },
   },
   monochrome: {
     id: "monochrome",
     name: "Monochrome Pro",
     dotColor: "#e4e4e7",
-    accent: "#ffffff",
+    accent: "#d4d4d8",
     secondary: "#a1a1aa",
-    glow: "rgba(255, 255, 255, 0.25)",
-    bg: "#09090b",
-    cardBg: "#18181b",
-    border: "#3f3f46",
-    textColor: "#ffffff",
-    nodeBkg: "#27272a",
-    subgraphBkg: "#141417",
-    lineColor: "#d4d4d8",
+    dark: {
+      canvasBg: "#09090b",
+      canvasDot: "#27272a",
+      cardBg: "#18181b",
+      border: "#3f3f46",
+      hoverBorder: "#d4d4d8",
+      textColor: "#fafafa",
+      mutedText: "#a1a1aa",
+      nodeBkg: "#27272a",
+      subgraphBkg: "#151518",
+      lineColor: "#52525b",
+      accent: "#e4e4e7",
+    },
+    light: {
+      canvasBg: "#ffffff",
+      canvasDot: "#e4e4e7",
+      cardBg: "#ffffff",
+      border: "#e4e4e7",
+      hoverBorder: "#18181b",
+      textColor: "#09090b",
+      mutedText: "#71717a",
+      nodeBkg: "#ffffff",
+      subgraphBkg: "#f4f4f5",
+      lineColor: "#52525b",
+      accent: "#18181b",
+    },
   },
 };
 
-export function DiagramStudio() {
+interface DiagramStudioProps {
+  colorMode?: DiagramColorMode;
+  onToggleColorMode?: (mode: DiagramColorMode) => void;
+}
+
+export function DiagramStudio({
+  colorMode: externalColorMode,
+  onToggleColorMode,
+}: DiagramStudioProps = {}) {
   // Studio configuration states
   const [diagramType, setDiagramType] = useState<DiagramType>("flowchart");
   const [prompt, setPrompt] = useState<string>("");
   const [orientation, setOrientation] = useState<FlowchartOrientation>("TD");
   const [complexity, setComplexity] = useState<ComplexityLevel>("standard");
   const [activeTheme, setActiveTheme] = useState<DiagramThemeId>("cyberpunk");
+  const [internalColorMode, setInternalColorMode] = useState<DiagramColorMode>("dark");
+  const colorMode = externalColorMode ?? internalColorMode;
+
+  const setColorMode = (update: DiagramColorMode | ((prev: DiagramColorMode) => DiagramColorMode)) => {
+    const next = typeof update === "function" ? update(colorMode) : update;
+    if (onToggleColorMode) {
+      onToggleColorMode(next);
+    } else {
+      setInternalColorMode(next);
+    }
+  };
+
+  const [isCompactPpt, setIsCompactPpt] = useState<boolean>(false);
+  const [textSize, setTextSize] = useState<"normal" | "large" | "xlarge">("large");
 
   // Code and tree states
   const [mermaidCode, setMermaidCode] = useState<string>(SAMPLE_DIAGRAMS.flowcharts[0].code);
@@ -164,14 +289,13 @@ export function DiagramStudio() {
   const [isExpandingNode, setIsExpandingNode] = useState<boolean>(false);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [isAuthError, setIsAuthError] = useState<boolean>(false);
 
   // Selection for AI expansion
   const [selectedNode, setSelectedNode] = useState<{ id: string; label: string } | null>(null);
   const [expandPrompt, setExpandPrompt] = useState<string>("");
 
   // Viewport states (unlimited zoom range 0.002x to 250x)
-  const [zoom, setZoom] = useState<number>(1);
+  const [zoom, setZoom] = useState<number>(1.1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -184,30 +308,56 @@ export function DiagramStudio() {
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [copiedSvg, setCopiedSvg] = useState<boolean>(false);
 
-  // API Key management states
-  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
-  const [customKey, setCustomKey] = useState<string>("");
-  const [savedKey, setSavedKey] = useState<string>("");
-  const [hasServerKey, setHasServerKey] = useState<boolean>(false);
-  const [serverKeyMasked, setServerKeyMasked] = useState<string | null>(null);
+  // Ollama local AI model states
+  const [ollamaOnline, setOllamaOnline] = useState<boolean>(true);
+  const [ollamaModel, setOllamaModel] = useState<string>("qwen2.5-coder:1.5b");
+  const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string>("http://localhost:11434");
+  const [installedModels, setInstalledModels] = useState<string[]>([]);
+  const [showOllamaModal, setShowOllamaModal] = useState<boolean>(false);
 
-  // Initialize Mermaid on mount
+  // Active palette helper
+  const currentPalette = useMemo(() => {
+    const config = DIAGRAM_THEMES[activeTheme] || DIAGRAM_THEMES.cyberpunk;
+    return colorMode === "light" ? config.light : config.dark;
+  }, [activeTheme, colorMode]);
+
+  // Sync colorMode to html element for whole-app theme switching
   useEffect(() => {
-    // Check localStorage for user-provided key
-    const local = localStorage.getItem("vectopus_gemini_api_key") || "";
-    if (local) {
-      setSavedKey(local);
-      setCustomKey(local);
+    if (typeof document !== "undefined") {
+      if (colorMode === "light") {
+        document.documentElement.classList.add("light");
+        document.documentElement.classList.remove("dark");
+        document.documentElement.setAttribute("data-theme", "light");
+      } else {
+        document.documentElement.classList.remove("light");
+        document.documentElement.classList.add("dark");
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
     }
+  }, [colorMode]);
 
-    // Check server key availability
+  // Initialize and check Ollama status on mount
+  useEffect(() => {
     fetch("/api/diagram")
       .then((r) => r.json())
       .then((data) => {
-        setHasServerKey(!!data.hasServerKey);
-        setServerKeyMasked(data.serverKeyMasked);
+        if (data.isOnline !== undefined) {
+          setOllamaOnline(!!data.isOnline);
+        }
+        if (data.model) {
+          setOllamaModel(data.model);
+        }
+        if (data.baseUrl) {
+          setOllamaBaseUrl(data.baseUrl);
+        }
+        if (data.models) {
+          setInstalledModels(data.models);
+        }
       })
-      .catch((e) => console.warn("Could not check server API key status", e));
+      .catch((e) => {
+        console.warn("Could not check Ollama status", e);
+        setOllamaOnline(false);
+      });
   }, []);
 
   // Parse mindmap tree whenever diagramType is mindmap and code changes
@@ -220,40 +370,61 @@ export function DiagramStudio() {
     }
   }, [diagramType, mermaidCode]);
 
-  // Render Mermaid code to SVG with theme variables, drop-shadow aura, and auto-repair
+  // Render Mermaid code to SVG with clean theme styling, zero glow, and auto-repair
   const renderMermaid = useCallback(
-    async (codeToRender: string, themeId: DiagramThemeId = activeTheme) => {
+    async (
+      codeToRender: string,
+      themeId: DiagramThemeId = activeTheme,
+      mode: DiagramColorMode = colorMode,
+      compact: boolean = isCompactPpt,
+      fontSz: "normal" | "large" | "xlarge" = textSize
+    ) => {
       if (!codeToRender || !codeToRender.trim()) return;
 
       const themeConfig = DIAGRAM_THEMES[themeId] || DIAGRAM_THEMES.cyberpunk;
+      const palette = mode === "light" ? themeConfig.light : themeConfig.dark;
+
+      const fontSizeMap = {
+        normal: "14px",
+        large: "16px",
+        xlarge: "18px",
+      };
+      const activeFontSize = fontSizeMap[fontSz];
 
       try {
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "loose",
           theme: "base",
+          flowchart: {
+            nodeSpacing: compact ? 22 : 45,
+            rankSpacing: compact ? 30 : 48,
+            padding: compact ? 10 : 16,
+            curve: "basis",
+            useMaxWidth: false,
+          },
           themeVariables: {
-            darkMode: true,
+            darkMode: mode === "dark",
             background: "transparent",
-            mainBkg: themeConfig.nodeBkg,
-            nodeBorder: themeConfig.accent,
-            clusterBkg: themeConfig.subgraphBkg,
-            clusterBorder: themeConfig.border,
-            titleColor: themeConfig.textColor,
-            textColor: themeConfig.textColor,
-            lineColor: themeConfig.lineColor,
-            primaryColor: themeConfig.nodeBkg,
-            primaryTextColor: themeConfig.textColor,
-            primaryBorderColor: themeConfig.accent,
-            secondaryColor: themeConfig.cardBg,
-            secondaryTextColor: themeConfig.textColor,
-            secondaryBorderColor: themeConfig.secondary,
-            tertiaryColor: themeConfig.subgraphBkg,
-            tertiaryTextColor: themeConfig.textColor,
-            tertiaryBorderColor: themeConfig.border,
-            edgeLabelBackground: themeConfig.bg,
-            fontFamily: '"Space Mono", monospace, ui-monospace, sans-serif',
-            fontSize: "13px",
+            mainBkg: palette.nodeBkg,
+            nodeBorder: palette.border,
+            clusterBkg: palette.subgraphBkg,
+            clusterBorder: palette.border,
+            titleColor: palette.textColor,
+            textColor: palette.textColor,
+            lineColor: palette.lineColor,
+            primaryColor: palette.nodeBkg,
+            primaryTextColor: palette.textColor,
+            primaryBorderColor: palette.border,
+            secondaryColor: palette.cardBg,
+            secondaryTextColor: palette.textColor,
+            secondaryBorderColor: palette.border,
+            tertiaryColor: palette.subgraphBkg,
+            tertiaryTextColor: palette.textColor,
+            tertiaryBorderColor: palette.border,
+            edgeLabelBackground: palette.cardBg,
+            fontFamily: '"Inter", "SF Pro Display", -apple-system, system-ui, sans-serif',
+            fontSize: activeFontSize,
           },
         });
       } catch (initErr) {
@@ -267,61 +438,115 @@ export function DiagramStudio() {
 
       const sanitized = cleanMermaidCode(codeToRender);
 
-      // Post-process SVG with glowing aura filters and modern styles
+      // Post-process SVG with clean, crisp modern styles — completely zero glow, enlarged high-contrast typography
       const postProcessSvg = (rawSvg: string): string => {
         const injectedStyles = `
-<defs>
-  <filter id="diagram-glow" x="-30%" y="-30%" width="160%" height="160%">
-    <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="${themeConfig.glow}" />
-  </filter>
-</defs>
 <style>
   svg {
-    font-family: "Space Mono", monospace, ui-monospace, sans-serif !important;
+    font-family: "Inter", "SF Pro Display", -apple-system, system-ui, sans-serif !important;
   }
+  /* Flowchart connection lines - clean neutral lines, absolutely NO glow */
+  .flowchart-link,
+  .edgePath .path,
+  path.path {
+    stroke: ${palette.lineColor} !important;
+    stroke-width: 1.4px !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    filter: none !important;
+  }
+  /* Flowchart arrowheads - clean neutral match */
+  .arrowMarkerPath,
+  .arrowheadPath,
+  marker path {
+    fill: ${palette.lineColor} !important;
+    stroke: none !important;
+    filter: none !important;
+  }
+  /* Mindmap branches - clean neutral curves */
+  .mindmap-edges path,
+  path.mindmap-edge,
+  .edge-thickness-normal {
+    stroke: ${palette.lineColor} !important;
+    stroke-width: 1.4px !important;
+    stroke-linecap: round !important;
+    filter: none !important;
+  }
+  /* Flowchart node boxes - subtle border, clean geometry */
+  .node rect,
+  .node circle,
+  .node polygon,
+  .node path {
+    rx: ${compact ? "6px" : "8px"};
+    ry: ${compact ? "6px" : "8px"};
+    stroke: ${palette.border} !important;
+    stroke-width: 1.25px !important;
+    transition: stroke 0.15s ease, opacity 0.15s ease;
+    filter: none !important;
+    cursor: pointer;
+  }
+  .node:hover rect,
+  .node:hover circle,
+  .node:hover polygon {
+    stroke: ${palette.hoverBorder} !important;
+    stroke-width: 1.75px !important;
+    opacity: 0.96;
+  }
+  /* Mindmap node shapes - smooth rounded shapes */
   .mindmap-node rect,
   .mindmap-node circle,
   .mindmap-node polygon,
   .mindmap-node path:not([class*='edge']) {
     rx: 8px;
     ry: 8px;
-    filter: drop-shadow(0 2px 6px ${themeConfig.glow});
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    stroke: ${palette.border} !important;
+    stroke-width: 1.25px !important;
+    transition: stroke 0.15s ease, opacity 0.15s ease;
+    filter: none !important;
     cursor: pointer;
   }
   .mindmap-node:hover rect,
   .mindmap-node:hover circle,
   .mindmap-node:hover polygon {
-    stroke-width: 2.5px !important;
-    filter: drop-shadow(0 0 14px ${themeConfig.accent});
+    stroke: ${palette.hoverBorder} !important;
+    stroke-width: 1.75px !important;
   }
-  .node rect,
-  .node circle,
-  .node polygon,
-  .node path {
-    rx: 6px;
-    ry: 6px;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    cursor: pointer;
-  }
-  .node:hover rect,
-  .node:hover circle,
-  .node:hover polygon {
-    stroke: ${themeConfig.accent} !important;
-    stroke-width: 2.5px !important;
-    filter: drop-shadow(0 0 12px ${themeConfig.glow});
-  }
-  .flowchart-link {
-    stroke: ${themeConfig.lineColor} !important;
-    stroke-width: 1.8px !important;
-  }
+  /* Subgraphs */
   .cluster rect {
     rx: 10px;
     ry: 10px;
-    stroke-dasharray: 4, 4;
+    stroke: ${palette.border} !important;
+    stroke-dasharray: 5, 3;
+    stroke-width: 1px !important;
+    fill: ${palette.subgraphBkg} !important;
+    filter: none !important;
   }
+  /* High-visibility typography for slides and screens */
   text {
-    font-family: "Space Mono", monospace !important;
+    font-family: "Inter", "SF Pro Display", -apple-system, system-ui, sans-serif !important;
+    letter-spacing: -0.015em !important;
+    fill: ${palette.textColor} !important;
+  }
+  .label text, .nodeLabel, .node text {
+    font-size: ${activeFontSize} !important;
+    font-weight: 600 !important;
+    fill: ${palette.textColor} !important;
+  }
+  .edgeLabel {
+    font-size: ${fontSz === "xlarge" ? "13px" : "11px"} !important;
+    color: ${palette.mutedText} !important;
+  }
+  .edgeLabel rect {
+    fill: ${palette.cardBg} !important;
+    stroke: ${palette.border} !important;
+    rx: 4px;
+    ry: 4px;
+    filter: none !important;
+  }
+  .edgeLabel text, .edgeLabel span {
+    font-size: ${fontSz === "xlarge" ? "13px" : "11px"} !important;
+    font-weight: 500 !important;
+    fill: ${palette.textColor} !important;
   }
 </style>
 `;
@@ -356,13 +581,13 @@ export function DiagramStudio() {
         }
       }
     },
-    [activeTheme]
+    [activeTheme, colorMode, isCompactPpt, textSize]
   );
 
-  // Re-render when mermaidCode or activeTheme changes
+  // Re-render when mermaidCode, activeTheme, colorMode, isCompactPpt, or textSize changes
   useEffect(() => {
-    renderMermaid(mermaidCode, activeTheme);
-  }, [mermaidCode, activeTheme, renderMermaid]);
+    renderMermaid(mermaidCode, activeTheme, colorMode, isCompactPpt, textSize);
+  }, [mermaidCode, activeTheme, colorMode, isCompactPpt, textSize, renderMermaid]);
 
   // Flowchart node list for AI expansion
   const flowchartNodes = useMemo(() => {
@@ -415,13 +640,12 @@ export function DiagramStudio() {
     setPan({ x: 0, y: 0 });
   };
 
-  // Generate Diagram with Gemini
+  // Generate Diagram with Ollama
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
     setApiError(null);
-    setIsAuthError(false);
 
     try {
       const res = await fetch("/api/diagram", {
@@ -433,7 +657,7 @@ export function DiagramStudio() {
           action: "generate",
           orientation,
           complexity,
-          customApiKey: savedKey || undefined,
+          compact: isCompactPpt,
         }),
       });
 
@@ -441,9 +665,6 @@ export function DiagramStudio() {
 
       if (!res.ok || !data.success) {
         setApiError(data.error || "Failed to generate diagram");
-        if (data.isAuthError) {
-          setIsAuthError(true);
-        }
         return;
       }
 
@@ -459,13 +680,13 @@ export function DiagramStudio() {
       setZoom(1);
       setPan({ x: 0, y: 0 });
     } catch (e: unknown) {
-      setApiError(e instanceof Error ? e.message : "Network error calling Gemini");
+      setApiError(e instanceof Error ? e.message : "Network error calling AI service");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Expand a specific node with Gemini AI
+  // Expand a specific node with AI (Ollama)
   const handleAiExpandNode = async () => {
     if (!selectedNode) return;
 
@@ -484,7 +705,6 @@ export function DiagramStudio() {
           existingCode: mermaidCode,
           orientation,
           complexity: "deep",
-          customApiKey: savedKey || undefined,
         }),
       });
 
@@ -492,7 +712,6 @@ export function DiagramStudio() {
 
       if (!res.ok || !data.success) {
         setApiError(data.error || "Failed to expand node");
-        if (data.isAuthError) setIsAuthError(true);
         return;
       }
 
@@ -540,21 +759,6 @@ export function DiagramStudio() {
     const updatedTree = toggleNodeCollapseInTree(mindmapTree, nodeId);
     setMindmapTree(updatedTree);
     setMermaidCode(treeToMindmap(updatedTree));
-  };
-
-  // Save custom key
-  const handleSaveKey = () => {
-    const trimmed = customKey.trim();
-    if (trimmed) {
-      localStorage.setItem("vectopus_gemini_api_key", trimmed);
-      setSavedKey(trimmed);
-    } else {
-      localStorage.removeItem("vectopus_gemini_api_key");
-      setSavedKey("");
-    }
-    setShowKeyModal(false);
-    setApiError(null);
-    setIsAuthError(false);
   };
 
   // Interactive Canvas Node Click Handler
@@ -640,19 +844,19 @@ export function DiagramStudio() {
           const curW = svgBox.width / (zoom || 1);
           const curH = svgBox.height / (zoom || 1);
           if (curW > 0 && curH > 0) {
-            const fitW = (contRect.width - 60) / curW;
-            const fitH = (contRect.height - 60) / curH;
-            const fitZoom = Math.min(fitW, fitH, 1.2);
+            const fitW = (contRect.width - 40) / curW;
+            const fitH = (contRect.height - 40) / curH;
+            const fitZoom = Math.min(fitW, fitH, isCompactPpt ? 1.6 : 1.35);
             setZoom(Math.max(0.01, fitZoom));
             setPan({ x: 0, y: 0 });
             return;
           }
         }
       }
-      setZoom(0.85);
+      setZoom(1.15);
       setPan({ x: 0, y: 0 });
     } else {
-      setZoom(1);
+      setZoom(1.15);
       setPan({ x: 0, y: 0 });
     }
   };
@@ -671,68 +875,130 @@ export function DiagramStudio() {
     URL.revokeObjectURL(url);
   };
 
-  // Download high-res PNG (2x retina canvas)
-  const handleDownloadPng = (scale = 2) => {
+  // Download high-res PNG (optional 16:9 PPT slide export)
+  const handleDownloadPng = (scale = 2, isPptSlide = false) => {
     if (!svgContent) return;
 
-    // Parse SVG for dimensions
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgContent, "image/svg+xml");
-    const svgEl = doc.querySelector("svg");
-    if (!svgEl) return;
+    try {
+      // Parse SVG for dimensions
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgContent, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      if (!svgEl) return;
 
-    let width = parseFloat(svgEl.getAttribute("width") || "0");
-    let height = parseFloat(svgEl.getAttribute("height") || "0");
+      let width = parseFloat(svgEl.getAttribute("width") || "0");
+      let height = parseFloat(svgEl.getAttribute("height") || "0");
 
-    if (!width || !height) {
-      const viewBox = svgEl.getAttribute("viewBox");
-      if (viewBox) {
-        const parts = viewBox.split(/\s+/).map(Number);
-        if (parts.length === 4) {
-          width = parts[2];
-          height = parts[3];
+      if (!width || !height || isNaN(width) || isNaN(height)) {
+        const viewBox = svgEl.getAttribute("viewBox");
+        if (viewBox) {
+          const parts = viewBox.trim().split(/[\s,]+/).map(Number);
+          if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+            width = parts[2];
+            height = parts[3];
+          }
         }
       }
+
+      if (!width || width <= 0 || isNaN(width)) width = 1200;
+      if (!height || height <= 0 || isNaN(height)) height = 800;
+
+      let canvasWidth = Math.round(width * scale);
+      let canvasHeight = Math.round(height * scale);
+
+      if (isPptSlide) {
+        // Standard 16:9 Widescreen slide dimensions (1920x1080 at scale)
+        canvasWidth = Math.round(1920 * (scale > 1.5 ? 1.5 : 1));
+        canvasHeight = Math.round(1080 * (scale > 1.5 ? 1.5 : 1));
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        setApiError("Could not create canvas context for PNG export.");
+        return;
+      }
+
+      // Background matching active palette and color mode
+      const bg = currentPalette.canvasBg || (colorMode === "light" ? "#ffffff" : "#09090b");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Ensure the SVG element has explicit width, height and namespace so the browser Image decodes it reliably
+      svgEl.setAttribute("width", `${width}`);
+      svgEl.setAttribute("height", `${height}`);
+      if (!svgEl.getAttribute("xmlns")) {
+        svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      }
+
+      const serializedSvg = new XMLSerializer().serializeToString(svgEl);
+      const svgBlob = new Blob([serializedSvg], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          if (isPptSlide) {
+            const padX = canvasWidth * 0.08;
+            const padY = canvasHeight * 0.1;
+            const availW = canvasWidth - padX * 2;
+            const availH = canvasHeight - padY * 2;
+            const drawScale = Math.min(availW / width, availH / height, 2.2);
+            const drawW = width * drawScale;
+            const drawH = height * drawScale;
+            const drawX = (canvasWidth - drawW) / 2;
+            const drawY = (canvasHeight - drawH) / 2;
+            ctx.drawImage(img, drawX, drawY, drawW, drawH);
+          } else {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+          URL.revokeObjectURL(url);
+
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              // Fallback to dataURL
+              const pngUrl = canvas.toDataURL("image/png");
+              const a = document.createElement("a");
+              a.href = pngUrl;
+              const suffix = isPptSlide ? "_slide_16x9.png" : ".png";
+              a.download = `${diagramTitle.toLowerCase().replace(/[^a-z0-9]/g, "_") || "diagram"}${suffix}`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              return;
+            }
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            const suffix = isPptSlide ? "_slide_16x9.png" : ".png";
+            a.download = `${diagramTitle.toLowerCase().replace(/[^a-z0-9]/g, "_") || "diagram"}${suffix}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          }, "image/png");
+        } catch (paintErr) {
+          console.error("Canvas draw error:", paintErr);
+          URL.revokeObjectURL(url);
+          setApiError("Canvas export failed. You can still download the SVG directly.");
+        }
+      };
+
+      img.onerror = (imgErr) => {
+        console.error("Image decode error during PNG export:", imgErr);
+        URL.revokeObjectURL(url);
+        setApiError("Failed to rasterize diagram into PNG. You can still download the SVG file.");
+      };
+
+      img.src = url;
+    } catch (err) {
+      console.error("handleDownloadPng error:", err);
+      setApiError("PNG generation failed. Please use Download SVG.");
     }
-
-    if (!width || width <= 0) width = 1200;
-    if (!height || height <= 0) height = 800;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(width * scale);
-    canvas.height = Math.round(height * scale);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Background matching active theme
-    const themeConfig = DIAGRAM_THEMES[activeTheme] || DIAGRAM_THEMES.cyberpunk;
-    ctx.fillStyle = themeConfig.bg || "#09090b";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const svgBlob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-    const img = new Image();
-
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-
-      const pngUrl = canvas.toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = pngUrl;
-      a.download = `${diagramTitle.toLowerCase().replace(/[^a-z0-9]/g, "_") || "diagram"}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      setApiError("Failed to rasterize SVG into PNG. You can still download the SVG file.");
-    };
-
-    img.src = url;
   };
+
 
   // Copy helpers
   const handleCopyCode = () => {
@@ -792,7 +1058,7 @@ export function DiagramStudio() {
               </span>
             )}
             <button
-              title="Expand with Gemini AI"
+              title="Expand with Qwen 2.5 Coder AI"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedNode({ id: node.id, label: node.label });
@@ -900,21 +1166,22 @@ export function DiagramStudio() {
             ))}
           </div>
 
-          {/* API Key Status Button */}
+          {/* Ollama Engine Status & Details Badge */}
           <button
-            onClick={() => setShowKeyModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-mono border border-border/40 bg-card hover:bg-card/80 text-muted-foreground hover:text-white transition-all"
-            title="Configure Gemini API Key"
+            onClick={() => setShowOllamaModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] bg-card border border-border/40 hover:border-pink/50 transition-all text-xs font-mono group"
+            title="Click to view Ollama server & model info"
           >
-            <Key className="w-3.5 h-3.5 text-pink" />
-            <span className="hidden md:inline">
-              {savedKey ? "Custom Key" : hasServerKey ? "Env Key Active" : "Set API Key"}
-            </span>
-            <div
+            <span
               className={`w-2 h-2 rounded-full ${
-                savedKey || hasServerKey ? "bg-green-400 animate-pulse" : "bg-pink"
+                ollamaOnline ? "bg-green-400" : "bg-red-500"
               }`}
             />
+            <Server className="w-3.5 h-3.5 text-pink" />
+            <span className="text-white font-bold">Ollama:</span>
+            <span className="text-pink font-semibold bg-pink/10 px-1.5 py-0.5 rounded text-[11px]">
+              {ollamaModel}
+            </span>
           </button>
         </div>
       </div>
@@ -923,15 +1190,16 @@ export function DiagramStudio() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         {/* Left Control & Outline Sidebar */}
         <aside className="lg:col-span-4 border-r border-border/40 p-6 overflow-y-auto space-y-6 bg-card/10 flex flex-col">
-          {/* Gemini AI Prompt Box */}
+          {/* AI Prompt Box */}
           <div className="space-y-3 bg-card/30 border border-border/40 rounded-[10px] p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-white font-mono text-xs font-bold uppercase tracking-wider">
-                <Sparkles className="w-4 h-4 text-pink animate-pulse" />
-                Generate with Gemini
+                <Sparkles className="w-4 h-4 text-pink" />
+                Generate with Qwen 2.5 Coder
               </div>
-              <span className="text-[9px] font-mono text-pink bg-pink/10 px-2 py-0.5 rounded-[4px]">
-                gemini-2.5-flash
+              <span className="text-[9px] font-mono text-pink bg-pink/10 px-2 py-0.5 rounded-[4px] flex items-center gap-1">
+                <Cpu className="w-3 h-3 text-pink" />
+                <span>{ollamaModel}</span>
               </span>
             </div>
 
@@ -956,7 +1224,7 @@ export function DiagramStudio() {
                 {isGenerating ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    Generating with Gemini...
+                    Generating with Qwen 2.5 Coder...
                   </>
                 ) : (
                   <>
@@ -989,21 +1257,19 @@ export function DiagramStudio() {
             </div>
           </div>
 
-          {/* Auth / API Error Alert */}
+          {/* API Error Alert */}
           {apiError && (
             <div className="p-3.5 rounded-[8px] bg-destructive/10 border border-destructive/40 text-destructive text-xs font-mono space-y-2">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div className="flex-1 leading-relaxed">{apiError}</div>
               </div>
-              {isAuthError && (
-                <button
-                  onClick={() => setShowKeyModal(true)}
-                  className="w-full text-center py-1 px-2 rounded-[4px] bg-destructive/20 hover:bg-destructive/30 text-white font-bold transition-colors"
-                >
-                  Configure Gemini API Key →
-                </button>
-              )}
+              <button
+                onClick={() => setShowOllamaModal(true)}
+                className="w-full text-center py-1 px-2 rounded-[4px] bg-destructive/20 hover:bg-destructive/30 text-white font-bold transition-colors"
+              >
+                View Ollama Diagnostics &amp; Setup →
+              </button>
             </div>
           )}
 
@@ -1123,9 +1389,10 @@ export function DiagramStudio() {
                 </div>
                 <button
                   onClick={() => setSelectedNode(null)}
-                  className="text-muted-foreground hover:text-white"
+                  className="text-muted-foreground hover:text-white p-0.5 rounded transition-colors"
+                  aria-label="Close"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
@@ -1145,7 +1412,7 @@ export function DiagramStudio() {
                 {isExpandingNode ? (
                   <>
                     <RefreshCw className="w-3 h-3 animate-spin" />
-                    Expanding with Gemini...
+                    Expanding with Qwen 2.5 Coder...
                   </>
                 ) : (
                   <>
@@ -1187,6 +1454,29 @@ export function DiagramStudio() {
                 ))}
               </div>
 
+              {/* Light / Dark Mode Toggle Button */}
+              <button
+                onClick={() => setColorMode((prev) => (prev === "dark" ? "light" : "dark"))}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-xs font-mono transition-all border ${
+                  colorMode === "light"
+                    ? "bg-amber-400/15 border-amber-400/40 text-amber-300 font-bold hover:bg-amber-400/20"
+                    : "bg-card border-border/40 text-muted-foreground hover:text-white hover:bg-card/70"
+                }`}
+                title={colorMode === "dark" ? "Switch to Light Theme" : "Switch to Dark Theme"}
+              >
+                {colorMode === "dark" ? (
+                  <>
+                    <Sun className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Light Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Dark Mode</span>
+                  </>
+                )}
+              </button>
+
               {/* Theme Switcher Dots */}
               <div className="flex items-center gap-1 bg-background p-0.5 rounded-[8px] border border-border/40">
                 {(
@@ -1206,16 +1496,57 @@ export function DiagramStudio() {
                         ? "bg-card text-white border border-border/60 shadow-sm font-bold"
                         : "text-muted-foreground hover:text-white hover:bg-card/40"
                     }`}
-                    title={`${t.label} Theme`}
+                    title={`${t.label} Palette`}
                   >
                     <span
                       className="w-2 h-2 rounded-full inline-block"
                       style={{
                         backgroundColor: t.dot,
-                        boxShadow: activeTheme === t.id ? `0 0 6px ${t.dot}` : "none",
+                        boxShadow: "none",
                       }}
                     />
                     <span className="hidden xl:inline">{t.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Compact PPT Mode Toggle for Flowcharts */}
+              {diagramType === "flowchart" && (
+                <button
+                  onClick={() => setIsCompactPpt(!isCompactPpt)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-xs font-mono transition-all border ${
+                    isCompactPpt
+                      ? "bg-pink/15 border-pink/50 text-pink font-bold shadow-sm"
+                      : "bg-card border-border/40 text-muted-foreground hover:text-white hover:bg-card/70"
+                  }`}
+                  title="Compact flowchart layout optimized for PowerPoint / Keynote slides"
+                >
+                  <Presentation className="w-3.5 h-3.5 text-pink" />
+                  <span>Compact PPT</span>
+                </button>
+              )}
+
+              {/* Text Size Selector */}
+              <div className="flex items-center gap-1 bg-background p-0.5 rounded-[8px] border border-border/40 text-xs font-mono">
+                <Type className="w-3.5 h-3.5 text-muted-foreground ml-1.5" />
+                {(
+                  [
+                    { id: "normal", label: "14px" },
+                    { id: "large", label: "16px" },
+                    { id: "xlarge", label: "18px" },
+                  ] as const
+                ).map((sz) => (
+                  <button
+                    key={sz.id}
+                    onClick={() => setTextSize(sz.id)}
+                    className={`px-2 py-1 rounded-[5px] text-[11px] transition-colors ${
+                      textSize === sz.id
+                        ? "bg-card text-white font-bold border border-border/60 shadow-sm"
+                        : "text-muted-foreground hover:text-white"
+                    }`}
+                    title={`Set diagram text size to ${sz.label}`}
+                  >
+                    {sz.label}
                   </button>
                 ))}
               </div>
@@ -1300,21 +1631,38 @@ export function DiagramStudio() {
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               onWheel={handleWheel}
-              className={`flex-1 overflow-hidden relative checkerboard flex items-center justify-center select-none ${
+              style={{
+                backgroundColor: currentPalette.canvasBg,
+                backgroundImage: `radial-gradient(circle, ${currentPalette.canvasDot} 1px, transparent 1px)`,
+                backgroundSize: "20px 20px",
+              }}
+              className={`flex-1 overflow-hidden relative flex items-center justify-center select-none ${
                 isDragging ? "cursor-grabbing" : "cursor-grab"
               }`}
             >
               {/* Floating Helper Tip */}
-              <div className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-black/70 backdrop-blur-md rounded-[6px] border border-border/30 text-[9px] font-mono text-muted-foreground pointer-events-none flex items-center gap-2 shadow-lg">
+              <div
+                className={`absolute top-4 left-4 z-10 px-3 py-1.5 backdrop-blur-md rounded-[6px] border text-[9px] font-mono pointer-events-none flex items-center gap-2 ${
+                  colorMode === "dark"
+                    ? "bg-black/70 border-border/30 text-muted-foreground shadow-lg"
+                    : "bg-white/90 border-slate-200 text-slate-700 shadow-md"
+                }`}
+              >
                 <Info className="w-3 h-3 text-pink" />
                 <span>Drag to pan · Unlimited focal zoom · Click node to expand</span>
               </div>
 
               {/* Diagram Title Banner */}
-              <div className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-black/70 backdrop-blur-md rounded-[6px] border border-border/30 text-[10px] font-mono text-white pointer-events-none flex items-center gap-2 shadow-lg">
+              <div
+                className={`absolute top-4 right-4 z-10 px-3 py-1.5 backdrop-blur-md rounded-[6px] border text-[10px] font-mono pointer-events-none flex items-center gap-2 ${
+                  colorMode === "dark"
+                    ? "bg-black/70 border-border/30 text-white shadow-lg"
+                    : "bg-white/90 border-slate-200 text-slate-900 shadow-md"
+                }`}
+              >
                 <span
-                  className="w-2 h-2 rounded-full animate-pulse"
-                  style={{ backgroundColor: DIAGRAM_THEMES[activeTheme].accent }}
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: currentPalette.accent }}
                 />
                 {diagramTitle}
               </div>
@@ -1322,7 +1670,7 @@ export function DiagramStudio() {
               {/* Floating Node Selection Action Bar */}
               {selectedNode && (
                 <div className="absolute bottom-4 left-4 z-10 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-[8px] border border-pink/40 text-[11px] font-mono text-white flex items-center gap-2 shadow-2xl animate-in fade-in slide-in-from-bottom-2">
-                  <Sparkles className="w-3.5 h-3.5 text-pink animate-pulse" />
+                  <Sparkles className="w-3.5 h-3.5 text-pink" />
                   <span className="truncate max-w-[200px] text-muted-foreground">
                     Selected: <strong className="text-white">{selectedNode.label}</strong>
                   </span>
@@ -1353,8 +1701,9 @@ export function DiagramStudio() {
                     }}
                     className="ml-1 p-1 text-muted-foreground hover:text-white transition-colors"
                     title="Deselect"
+                    aria-label="Deselect"
                   >
-                    ✕
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
@@ -1480,12 +1829,22 @@ export function DiagramStudio() {
               </div>
             </div>
 
-            {/* Download Buttons: SVG and PNG */}
-            <div className="flex items-center gap-3">
+            {/* Download Buttons: SVG, PNG, and PPT (16:9) */}
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => handleDownloadPng(2, true)}
+                disabled={!svgContent}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-[8px] text-xs font-mono border border-pink/30 bg-pink/10 hover:bg-pink/20 text-white transition-all font-bold disabled:opacity-40"
+                title="Export 16:9 widescreen PNG slide with high-contrast text for PowerPoint / Keynote"
+              >
+                <Presentation className="w-3.5 h-3.5 text-pink" />
+                download ppt (16:9)
+              </button>
+
               <button
                 onClick={handleDownloadSvg}
                 disabled={!svgContent}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-[8px] text-xs font-mono border border-border/40 bg-card hover:bg-card/80 text-white transition-all font-bold disabled:opacity-40"
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-[8px] text-xs font-mono border border-border/40 bg-card hover:bg-card/80 text-white transition-all font-bold disabled:opacity-40"
               >
                 <Download className="w-3.5 h-3.5 text-pink" />
                 download svg
@@ -1494,7 +1853,7 @@ export function DiagramStudio() {
               <button
                 onClick={() => handleDownloadPng(2)}
                 disabled={!svgContent}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-[8px] text-xs font-mono bg-pink text-pink-foreground hover:opacity-95 transition-all font-bold shadow-[0_2px_15px_rgba(236,72,153,0.3)] disabled:opacity-40"
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-[8px] text-xs font-mono bg-pink text-pink-foreground hover:opacity-90 transition-all font-bold disabled:opacity-40 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5 fill-current" />
                 download png (2x)
@@ -1504,97 +1863,92 @@ export function DiagramStudio() {
         </section>
       </div>
 
-      {/* Gemini API Key Configuration Modal */}
-      {showKeyModal && (
+      {/* Ollama Engine & Model Status Modal */}
+      {showOllamaModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-card border border-border/60 rounded-[12px] p-6 max-w-lg w-full space-y-5 shadow-2xl font-mono">
             <div className="flex items-center justify-between border-b border-border/30 pb-3">
               <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <Key className="w-4 h-4 text-pink" />
-                Gemini API Key Settings
+                <Server className="w-4 h-4 text-pink" />
+                Ollama Engine &amp; Model Status
               </div>
               <button
-                onClick={() => setShowKeyModal(false)}
-                className="text-muted-foreground hover:text-white text-sm"
+                onClick={() => setShowOllamaModal(false)}
+                className="text-muted-foreground hover:text-white p-1 rounded transition-colors"
+                aria-label="Close modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Server Environment Key Info */}
+            {/* Ollama Server Status */}
             <div className="space-y-1.5 text-xs">
               <span className="text-muted-foreground uppercase text-[10px] tracking-wider">
-                System Bash Environment Key:
+                Ollama Daemon Status:
               </span>
               <div className="p-3 bg-background border border-border/30 rounded-[6px] flex items-center justify-between">
-                <div>
-                  {hasServerKey ? (
-                    <span className="text-green-400 font-bold">
-                      Detected ({serverKeyMasked})
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">Not found in process.env / ~/.bashrc</span>
-                  )}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      ollamaOnline ? "bg-green-400" : "bg-red-500"
+                    }`}
+                  />
+                  <span className={ollamaOnline ? "text-green-400 font-bold" : "text-destructive font-bold"}>
+                    {ollamaOnline ? "Online & Ready" : "Unreachable"}
+                  </span>
                 </div>
-                <span className="text-[10px] text-muted-foreground">GEMINI_API_KEY</span>
+                <code className="text-[11px] text-pink bg-pink/10 px-2 py-0.5 rounded">
+                  {ollamaBaseUrl}
+                </code>
               </div>
-              <p className="text-[10px] text-muted-foreground">
-                Vectopus automatically scans <code className="text-pink">process.env.GEMINI_API_KEY</code> and{" "}
-                <code className="text-pink">~/.bashrc</code>.
-              </p>
             </div>
 
-            {/* Custom Key Override */}
-            <div className="space-y-2 text-xs">
-              <label className="text-muted-foreground uppercase text-[10px] tracking-wider">
-                Override with Custom API Key:
-              </label>
-              <input
-                type="password"
-                value={customKey}
-                onChange={(e) => setCustomKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full bg-background border border-border/40 rounded-[6px] p-2.5 text-xs font-mono text-white focus:outline-none focus:border-pink"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Get a free key from{" "}
-                <a
-                  href="https://aistudio.google.com/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-pink hover:underline inline-flex items-center gap-1"
-                >
-                  Google AI Studio <ExternalLink className="w-2.5 h-2.5" />
-                </a>
-                . Keys start with <code className="text-white">AIzaSy...</code>
-              </p>
+            {/* Active Model Config */}
+            <div className="space-y-1.5 text-xs">
+              <span className="text-muted-foreground uppercase text-[10px] tracking-wider">
+                Configured Model (.env.local):
+              </span>
+              <div className="p-3 bg-background border border-border/30 rounded-[6px] flex items-center justify-between">
+                <span className="text-white font-bold">{ollamaModel}</span>
+                <span className="text-[10px] text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">
+                  Active
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/30">
-              {savedKey && (
-                <button
-                  onClick={() => {
-                    localStorage.removeItem("vectopus_gemini_api_key");
-                    setSavedKey("");
-                    setCustomKey("");
-                  }}
-                  className="px-3 py-2 text-xs text-destructive hover:bg-destructive/10 rounded-[6px] transition-colors"
-                >
-                  Clear Custom Key
-                </button>
-              )}
+            {/* Installed Models */}
+            {installedModels.length > 0 && (
+              <div className="space-y-1.5 text-xs">
+                <span className="text-muted-foreground uppercase text-[10px] tracking-wider">
+                  Installed Models in Ollama:
+                </span>
+                <div className="flex flex-wrap gap-1.5 p-2 bg-background border border-border/30 rounded-[6px]">
+                  {installedModels.map((m) => (
+                    <span
+                      key={m}
+                      className="px-2 py-0.5 rounded text-[10px] bg-card border border-border/40 text-foreground"
+                    >
+                      {m}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Setup & Run Instructions */}
+            <div className="space-y-1.5 text-[11px] text-muted-foreground bg-background/50 border border-border/20 rounded-[6px] p-3 leading-relaxed">
+              <div className="text-white font-bold text-xs mb-1">Quick Setup &amp; Execution:</div>
+              <div>• Native CLI: <code className="text-pink">ollama run qwen2.5-coder:1.5b</code></div>
+              <div>• Docker Compose: <code className="text-pink">docker compose up -d</code></div>
+              <div>• Switch model: update <code className="text-pink">OLLAMA_MODEL</code> in <code className="text-pink">.env.local</code></div>
+            </div>
+
+            <div className="flex items-center justify-end pt-2 border-t border-border/30">
               <button
-                onClick={() => setShowKeyModal(false)}
-                className="px-4 py-2 text-xs text-muted-foreground hover:text-white transition-colors"
+                onClick={() => setShowOllamaModal(false)}
+                className="px-4 py-2 text-xs font-bold rounded-[6px] bg-pink text-pink-foreground hover:opacity-90 transition-all"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveKey}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-[6px] bg-pink text-pink-foreground text-xs font-bold hover:opacity-90 transition-all shadow-sm"
-              >
-                <Save className="w-3.5 h-3.5" />
-                Save Key
+                Close
               </button>
             </div>
           </div>

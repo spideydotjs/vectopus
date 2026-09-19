@@ -1,18 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Syne, Space_Mono } from "next/font/google";
-import "./globals.css";
 
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["700", "800"],
-  variable: "--font-display",
-});
-
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-mono",
-});
 
 export const viewport: Viewport = {
   themeColor: "#fc668f",
@@ -86,9 +73,11 @@ export const metadata: Metadata = {
   },
 };
 
+import "./globals.css";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${syne.variable} ${spaceMono.variable}`}>
+    <html lang="en">
       <body className="antialiased">{children}</body>
     </html>
   );

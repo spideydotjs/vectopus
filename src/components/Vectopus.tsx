@@ -26,6 +26,8 @@ import {
   Grid,
   Info,
   Maximize,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 function formatBytes(n: number) {
@@ -38,8 +40,26 @@ type ViewMode = "compare" | "split" | "svg-only" | "original";
 type PresetType = "logo" | "detailed" | "silhouette" | "outline" | "pixel" | "custom";
 
 export function Vectopus() {
-  // Studio navigation mode - default to vectorizer
-  const [activeStudio, setActiveStudio] = useState<"vectorizer" | "diagrams">("vectorizer");
+  // Whole-app color mode (dark or light)
+  const [colorMode, setColorMode] = useState<"dark" | "light">("dark");
+
+  // Keep HTML document classes in sync with whole app theme
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (colorMode === "light") {
+        document.documentElement.classList.add("light");
+        document.documentElement.classList.remove("dark");
+        document.documentElement.setAttribute("data-theme", "light");
+      } else {
+        document.documentElement.classList.remove("light");
+        document.documentElement.classList.add("dark");
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    }
+  }, [colorMode]);
+
+  // Studio navigation mode - default to diagrams (flowcharts/mindmaps)
+  const [activeStudio, setActiveStudio] = useState<"vectorizer" | "diagrams">("diagrams");
 
   // AI Vector Refine states
   const [rawSvg, setRawSvg] = useState<string | null>(null);
@@ -339,50 +359,86 @@ export function Vectopus() {
 
   const handleDownloadPng = (scale = 2) => {
     if (!svg || !file) return;
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svg, "image/svg+xml");
-    const svgEl = doc.querySelector("svg");
-    if (!svgEl) return;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      if (!svgEl) return;
 
-    let width = parseFloat(svgEl.getAttribute("width") || "0");
-    let height = parseFloat(svgEl.getAttribute("height") || "0");
-    if (!width || !height) {
-      const viewBox = svgEl.getAttribute("viewBox");
-      if (viewBox) {
-        const parts = viewBox.split(/\s+/).map(Number);
-        if (parts.length === 4) {
-          width = parts[2];
-          height = parts[3];
+      let width = parseFloat(svgEl.getAttribute("width") || "0");
+      let height = parseFloat(svgEl.getAttribute("height") || "0");
+      if (!width || !height || isNaN(width) || isNaN(height)) {
+        const viewBox = svgEl.getAttribute("viewBox");
+        if (viewBox) {
+          const parts = viewBox.trim().split(/[\s,]+/).map(Number);
+          if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+            width = parts[2];
+            height = parts[3];
+          }
         }
       }
+      if (!width || width <= 0 || isNaN(width)) width = 800;
+      if (!height || height <= 0 || isNaN(height)) height = 600;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.fillStyle = colorMode === "light" ? "#ffffff" : "#121212";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      svgEl.setAttribute("width", `${width}`);
+      svgEl.setAttribute("height", `${height}`);
+      if (!svgEl.getAttribute("xmlns")) {
+        svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      }
+
+      const serialized = new XMLSerializer().serializeToString(svgEl);
+      const blob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob((pngBlob) => {
+            if (!pngBlob) {
+              const pngUrl = canvas.toDataURL("image/png");
+              const a = document.createElement("a");
+              a.href = pngUrl;
+              a.download = file.name.replace(/\.[^/.]+$/, "") + (isRefined ? "_refined.png" : ".png");
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              return;
+            }
+            const pngUrl = URL.createObjectURL(pngBlob);
+            const a = document.createElement("a");
+            a.href = pngUrl;
+            a.download = file.name.replace(/\.[^/.]+$/, "") + (isRefined ? "_refined.png" : ".png");
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
+          }, "image/png");
+        } catch (e) {
+          console.error("Canvas export failed:", e);
+          URL.revokeObjectURL(url);
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        setErr("Could not render PNG from SVG. Please use Download SVG.");
+      };
+
+      img.src = url;
+    } catch (err) {
+      console.error("handleDownloadPng error:", err);
     }
-    if (!width || width <= 0) width = 800;
-    if (!height || height <= 0) height = 600;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(width * scale);
-    canvas.height = Math.round(height * scale);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.fillStyle = "#121212";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      const pngUrl = canvas.toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = pngUrl;
-      a.download = file.name.replace(/\.[^/.]+$/, "") + (isRefined ? "_refined.png" : ".png");
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    };
-    img.src = url;
   };
 
   const handleCopyCode = () => {
@@ -467,7 +523,7 @@ export function Vectopus() {
       {/* Header */}
       <header className="border-b border-border/40 backdrop-blur-md bg-background/80 sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <VectopusLogo className="h-8 w-8 text-pink animate-pulse" />
+          <VectopusLogo className="h-8 w-8 text-pink" />
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               vectopus{" "}
@@ -507,12 +563,36 @@ export function Vectopus() {
             <Sparkles className="w-3.5 h-3.5" />
             <span>Flowcharts &amp; Mindmaps</span>
             <span className="text-[9px] px-1.5 py-0.2 bg-white/20 text-white rounded font-mono uppercase tracking-wider">
-              Gemini
+              Ollama
             </span>
           </button>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Whole App Theme Switcher */}
+          <button
+            type="button"
+            onClick={() => setColorMode((prev) => (prev === "dark" ? "light" : "dark"))}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-xs font-mono transition-all border ${
+              colorMode === "light"
+                ? "bg-amber-400/15 border-amber-400/40 text-amber-500 font-bold hover:bg-amber-400/25"
+                : "bg-card border-border/40 text-muted-foreground hover:text-white hover:bg-card/70"
+            }`}
+            title={colorMode === "dark" ? "Switch entire app to Light Theme" : "Switch entire app to Dark Theme"}
+          >
+            {colorMode === "dark" ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Light Mode</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-blue-500" />
+                <span className="hidden sm:inline">Dark Mode</span>
+              </>
+            )}
+          </button>
+
           {activeStudio === "vectorizer" && file && (
             <button
               onClick={clearFile}
@@ -527,7 +607,10 @@ export function Vectopus() {
 
       {/* Main Studio Area */}
       {activeStudio === "diagrams" ? (
-        <DiagramStudio />
+        <DiagramStudio
+          colorMode={colorMode}
+          onToggleColorMode={(m) => setColorMode(m)}
+        />
       ) : (
         <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden h-[calc(100vh-69px)]">
         {/* Left Control Sidebar */}
@@ -623,7 +706,7 @@ export function Vectopus() {
                       </div>
                     </div>
                     <p className="text-[9px] font-mono text-pink/80 leading-snug">
-                      💡 Tip: Click anywhere on the left preview image to pick a specific color.
+                      Tip: Click anywhere on the left preview image to pick a specific color.
                     </p>
 
                     <div className="space-y-1">
@@ -773,7 +856,7 @@ export function Vectopus() {
                       onClick={() => applyPreset(p.id)}
                       className={`text-left p-2.5 rounded-[8px] border transition-all ${
                         preset === p.id
-                          ? "border-pink bg-pink/5 text-white shadow-[0_0_12px_rgba(236,72,153,0.15)]"
+                          ? "border-pink bg-pink/5 text-white"
                           : "border-border/30 bg-card/20 text-muted-foreground hover:border-border hover:bg-card/50"
                       }`}
                     >
@@ -949,21 +1032,21 @@ export function Vectopus() {
                 )}
               </button>
 
-              {/* 3. AI Vector Refine with Gemini */}
+              {/* 3. AI Vector Refine with Ollama / Qwen 2.5 Coder */}
               {svg && (
                 <div className="bg-card/40 border border-pink/30 rounded-[10px] p-4 space-y-4 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between border-b border-border/30 pb-2">
                     <div className="flex items-center gap-2 text-white">
-                      <Sparkles className="w-4 h-4 text-pink animate-pulse" />
+                      <Sparkles className="w-4 h-4 text-pink" />
                       <h3 className="text-xs uppercase font-bold tracking-wider font-mono">
                         3. AI Vector Refine
                       </h3>
                     </div>
-                    {isRefined && (
-                      <span className="text-[9px] font-mono px-2 py-0.5 bg-pink/20 text-pink rounded-[4px] font-bold">
-                        AI Refined
-                      </span>
-                    )}
+                    {/* Model Badge */}
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-background border border-border/30 text-[9px] font-mono text-white">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                      <span>Qwen 2.5 Coder</span>
+                    </div>
                   </div>
 
                   {/* Refine Presets */}
@@ -1027,12 +1110,14 @@ export function Vectopus() {
                       {isRefining ? (
                         <>
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          refining vector with gemini...
+                          refining vector with Qwen 2.5 Coder...
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-3.5 h-3.5 fill-current" />
-                          {isRefined ? "re-refine with gemini" : "refine vector with gemini"}
+                          {isRefined
+                            ? "re-refine with Qwen 2.5 Coder"
+                            : "refine vector with Qwen 2.5 Coder"}
                         </>
                       )}
                     </button>
@@ -1057,7 +1142,7 @@ export function Vectopus() {
         <section className="lg:col-span-8 flex flex-col bg-background overflow-hidden relative">
           {!file ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground font-mono">
-              <ImageIcon className="w-16 h-16 text-muted/20 mb-4 animate-pulse" />
+              <ImageIcon className="w-16 h-16 text-muted/20 mb-4" />
               <p className="text-sm max-w-[280px]">
                 Upload an image in the sidebar to start vectorizing.
               </p>

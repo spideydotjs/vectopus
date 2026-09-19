@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vectopus:latest
+    container_name: vectopus-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:1.5b}
+    env_file:
+      - .env.local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      ollama:
+        condition: service_healthy
+      ollama-model-init:
+        condition: service_completed_successfully
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: vectopus-ollama
+    restart: unless-stopped
+    # Map to host port 11435 to avoid port collision if host machine has native Ollama on 11434
+    ports:
+      - "${OLLAMA_HOST_PORT:-11435}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 4s
+      timeout: 4s
+      retries: 6
+      start_period: 3s
+
+  ollama-model-init:
+    image: curlimages/curl:latest
+    container_name: vectopus-model-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:1.5b}
+    restart: "no"
+    entrypoint:
+      - "sh"
+      - "-c"
+      - |
+        echo "Checking/pulling $${OLLAMA_MODEL} into container..."
+        curl -s -X POST http://ollama:11434/api/pull -d "{\"name\": \"$${OLLAMA_MODEL}\", \"stream\": false}"
+        echo "Model initialization complete!"
+
+volumes:
+  ollama_data:

@@ -77,6 +77,41 @@
   --scalable-foreground: oklch(0.145 0 0);
 }
 
+.light, [data-theme="light"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --primary: #0f172a;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #94a3b8;
+
+  --pink: #ec4899;
+  --pink-foreground: #ffffff;
+  --scalable: #10b981;
+  --scalable-foreground: #ffffff;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -140,16 +175,7 @@
 }
 
 @utility checkerboard {
-  background-color: #121212;
-  background-image:
-    linear-gradient(45deg, #1d1d1d 25%, transparent 25%),
-    linear-gradient(-45deg, #1d1d1d 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #1d1d1d 75%),
-    linear-gradient(-45deg, transparent 75%, #1d1d1d 75%);
-  background-size: 16px 16px;
-  background-position:
-    0 0,
-    0 8px,
-    8px -8px,
-    -8px 0px;
+  background-color: #0e0e10;
+  background-image: radial-gradient(circle, #1f1f24 1px, transparent 1px);
+  background-size: 20px 20px;
 }

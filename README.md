@@ -1,103 +1,147 @@
-![Vectopus Banner](banner.png)
-
 # Vectopus
 
-Vectopus is a browser-based, client-side image-to-vector studio that converts raster images (PNG, JPG, WEBP) into scalable vector graphics (SVG) entirely in the browser.
+![Vectopus Banner](public/banner.png)
 
-![Vectopus Interface](interface.png)
+Vectopus is a high-performance vector and diagram engineering suite. It pairs a client-side raster-to-vector tracer (PNG/JPG/WEBP to SVG) with an AI diagram studio powered by local Ollama models (`qwen2.5-coder:1.5b`).
 
-The application utilizes canvas-based image preprocessing and advanced tracing configurations to produce clean, optimized SVGs without sending any files to external servers.
+The entire architecture is containerized and runs 100% locally with Docker Compose—no external AI cloud APIs, subscriptions, or API keys required.
 
-## Features
+---
 
-### Interactive Viewport
+## Visual Previews
 
-- **Synchronized Zoom and Pan:** Drag the workspace to pan and scroll to zoom up to 1200% to inspect vector precision directly aligned with original pixels.
-- **Split Curtain Slider:** Drag a vertical divider curtain overlay to transition between the original image and the vectorized SVG in real-time.
+### Diagram Studio & Architecture Flowcharts
+![Vectopus Diagram Studio](public/flowchart.png)
 
-  ![Split Curtain Preview](split.png)
+### Compact PPT Mode & Mindmaps
+![Vectopus Studio Overview](public/studio.png)
 
-- **Side-by-Side Comparison:** Compare the source and vector output side-by-side inside independent, synced preview cards.
+### Raster-to-Vector Preprocessor & Interactive Split View
+![Vectopus Split View](public/split.png)
 
-### Image Preprocessing Pipeline
+### AI Node Expansion & Deepening
+![AI Node Expansion](public/expand.png)
 
-- **Chroma Key Background Eraser:** Choose between automatic background detection (edge scanning) and custom color extraction.
-- **Interactive Eyedropper:** Click directly on the preprocessed preview to pick and erase target background colors.
-- **Chroma Tolerance Slider:** Tune the color-matching tolerance boundaries with a smooth transition feather.
-- **Contrast and Brightness Filters:** Adjust contrast and brightness sliders to isolate details or outlines.
-- **Binarization (Silhouette Mode):** Convert images into high-contrast black-and-white silhouettes before vectorization.
+---
 
-### Advanced Tracing Engine
+## Core Capabilities
 
-- **Tracing Presets:**
-  - **Logo/Graphic:** Flat solid color tracing with sharp boundaries.
-  - **Detailed Vector:** High color depth mapping for complex graphics.
-  - **Silhouette:** Solid contrast-mask tracing.
-  - **Outline Sketch:** Outline contours with stroke customization.
-  - **Retro Pixel Art:** Retains sharp pixel boundaries using right-angle alignment.
-- **Custom Engine Tuning:** Adjust color count limits, despeckling noise filters, line/spline smoothing coefficients, and coordinate rounding decimal precision to control file size.
+### 1. AI Flowchart & Mindmap Studio
+- **Default Flowchart Workspace**: Architectural diagrams, execution pipelines, and dataflows ready on launch.
+- **Local Ollama Inference**: Generates clean, robust Mermaid syntax using `qwen2.5-coder:1.5b` with automated syntax self-repair.
+- **Node-Level AI Expansion**: Click any flowchart or mindmap node to trigger contextual branch expansion directly from the canvas.
+- **Compact PPT Mode**: Reduces spacing (`nodeSpacing: 22`, `rankSpacing: 30`) and optimizes orientation for slide presentations.
+- **Presentation Export**: One-click **download ppt (16:9)** slide generation (2880x1620 / 3840x2160) alongside standard vector SVG and high-resolution PNG exports.
+- **High-Visibility Typography**: Clean, high-contrast text rendering with selectable font scaling (`14px`, `16px`, `18px`) and zero line glow.
+- **Unlimited Viewport Navigation**: Focal-point zoom from `0.002x` to `250x` (`25,000%`) with smooth click-and-drag panning.
 
-### SVG Inspector
+### 2. Whole-App Light & Dark Theme
+- **Global Theme Engine**: Instant, unified toggle across the entire application interface (toolbars, canvases, cards, typography, and controls).
+- **5 Professional Color Palettes**: Cyberpunk, Matrix, Sapphire, Amber, and Monochrome Pro.
 
-- **Performance Metrics:** View input PNG file size vs output SVG file size, compression ratios, and path complexity.
-- **Markup Inspector:** View, copy, or download the raw SVG source code.
+### 3. Client-Side Image-to-Vector Studio
+- **100% Private & Browser-Native**: Image tracing is processed directly on the client machine via Web APIs and canvas preprocessing.
+- **Background Removal**: Auto-detection and interactive eyedropper chroma-key background removal.
+- **5 Vectorization Presets**: Optimized profiles for logos, detailed illustrations, black-and-white silhouettes, technical outlines, and pixel art.
+- **Interactive Split Slider**: Real-time curtain comparison overlay between the source raster pixels and generated SVG paths.
+- **Local AI Vector Refinement**: Prompt-guided SVG simplification, recoloring, and path smoothing via the local model.
 
-## Tech Stack
+---
 
-- **Framework:** TanStack Start (SSR React Meta-framework)
-- **Build Tool:** Vite
-- **Styling:** TailwindCSS
-- **Tracing Library:** ImageTracerJS
-- **Icons:** Lucide React
+## Architecture & Docker Setup
 
-## Getting Started
+Vectopus runs as a completely self-contained Docker multi-container system:
 
-### Prerequisites
+- **vectopus-app**: Next.js 15 standalone application container.
+- **vectopus-ollama**: Official Ollama container managing model execution.
+- **vectopus-model-init**: Ephemeral bootstrap container that ensures the `qwen2.5-coder:1.5b` weights are downloaded and healthy.
 
-Make sure you have Node.js and npm (or Bun) installed.
+> **Note**: You do not need to install Ollama or Python on your host machine. Docker manages the entire AI inference environment and persistent model storage (`ollama_data` volume).
 
-### Installation
+---
 
-Clone the repository and install the dependencies:
+## Installation & Deployment
 
-```bash
-npm install --legacy-peer-deps
-```
+### Option A: Docker Compose (Recommended)
 
-### Running Locally
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/spideydotjs/vectopus.git
+   cd vectopus
+   ```
 
-Run the development server:
+2. **Start the containers**:
+   ```bash
+   docker compose up -d
+   ```
 
-```bash
-npm run dev
-```
+3. **Access the application**:
+   - Open `http://localhost:3000` (or your configured `APP_PORT`).
+   - The AI engine will be online and initialized automatically.
 
-Open `http://localhost:8080` in your browser.
+4. **Stop the environment**:
+   ```bash
+   docker compose down
+   ```
 
-### Building for Production
+---
 
-To build the application for production deployment:
+### Option B: Local Host Development
+
+If you prefer to run the Next.js development server directly on your host machine:
+
+1. **Prerequisites**:
+   - Node.js 20+
+   - Ollama installed locally (or running via Docker on port 11434)
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**:
+   Create a `.env.local` file:
+   ```env
+   OLLAMA_BASE_URL="http://localhost:11434"
+   OLLAMA_MODEL="qwen2.5-coder:1.5b"
+   ```
+
+4. **Pull the model**:
+   ```bash
+   ollama pull qwen2.5-coder:1.5b
+   ```
+
+5. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:3000` in your browser.
+
+---
+
+## Production Build Verification
+
+Verify clean static generation and type safety:
 
 ```bash
 npm run build
 ```
 
-To preview the production build locally:
+---
 
-```bash
-npm run preview
-```
+## Tech Stack
 
-## Contributing
+- **Framework**: Next.js 15 (App Router, Standalone Output)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **Diagram Engine**: Mermaid.js with custom layout post-processing
+- **Vector Engine**: ImageTracerJS + HTML5 Canvas
+- **AI Inference**: Local Ollama daemon (`qwen2.5-coder:1.5b`)
+- **Icons**: Lucide React
+- **Containerization**: Docker & Docker Compose
 
-Contributions are welcome. Please feel free to submit issues or pull requests to help improve Vectopus:
-
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/amazing-feature`).
-3. Commit your changes (`git commit -m 'feat: add some amazing feature'`).
-4. Push to the branch (`git push origin feature/amazing-feature`).
-5. Open a Pull Request.
+---
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0) - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE) for details.
