@@ -267,6 +267,11 @@ export function Vectopus() {
       setErr("Please upload an image (PNG, JPG, or WEBP).");
       return;
     }
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+    if (f.size > MAX_FILE_SIZE) {
+      setErr("Image file size exceeds 25MB limit. Please upload a smaller image.");
+      return;
+    }
     setErr(null);
     setSvg(null);
     setFile(f);

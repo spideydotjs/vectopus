@@ -1,7 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateWithOllama, getOllamaConfig } from "@/lib/ollama";
+import { generateWithOllama } from "@/lib/ollama";
+import { checkRateLimit, llmConcurrencyLimiter } from "@/lib/rate-limit";
+
+const MAX_SVG_BYTES = 250 * 1024; // 250KB
 
 export async function POST(req: NextRequest) {
+  // Rate limiting by client IP
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  const rateLimitResult = checkRateLimit(`refine_${clientIp}`, 15, 60000);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { success: false, error: "Rate limit exceeded. Please wait a minute before requesting more refinements." },
+      { status: 429 }
+    );
+  }
+
+  // Concurrency check
+  if (!llmConcurrencyLimiter.acquire()) {
+    return NextResponse.json(
+      { success: false, error: "Server is currently busy refining another graphic. Please try again in a few seconds." },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await req.json();
     const {
@@ -13,6 +34,20 @@ export async function POST(req: NextRequest) {
     if (!svg || typeof svg !== "string") {
       return NextResponse.json(
         { success: false, error: "SVG content is required for refinement." },
+        { status: 400 }
+      );
+    }
+
+    if (svg.length > MAX_SVG_BYTES) {
+      return NextResponse.json(
+        { success: false, error: "SVG exceeds the maximum allowed size (250KB) for AI refinement. Please simplify the SVG first." },
+        { status: 413 }
+      );
+    }
+
+    if (prompt && typeof prompt === "string" && prompt.length > 1000) {
+      return NextResponse.json(
+        { success: false, error: "Prompt exceeds maximum allowed length of 1,000 characters." },
         { status: 400 }
       );
     }
@@ -36,12 +71,7 @@ export async function POST(req: NextRequest) {
         "Enhance vector clarity, add subtle depth, organize layers with semantic <g> elements, and optimize geometry.";
     }
 
-    // Truncate SVG if overly massive (> 250KB) to prevent token limits
-    let svgPayload = svg.trim();
-    if (svgPayload.length > 250000) {
-      svgPayload = svgPayload.slice(0, 250000) + "\n</svg>";
-    }
-
+    const safePrompt = String(prompt).replace(/[`\\]/g, "");
     const userPrompt = `You are a world-class SVG vector designer and graphics engineer.
 You are tasked with refining and elevating this traced SVG image.
 
@@ -49,11 +79,11 @@ Refinement Style / Goal:
 ${presetGuidance}
 
 User Instructions:
-${prompt}
+${safePrompt}
 
 Original SVG:
 \`\`\`xml
-${svgPayload}
+${svg.trim()}
 \`\`\`
 
 Strict Rules:
@@ -62,8 +92,6 @@ Strict Rules:
 3. Use modern SVG techniques (e.g. <defs>, <linearGradient>, <radialGradient>, clean fills, clean strokes) where appropriate.
 4. Ensure the output is 100% VALID, self-contained SVG with xmlns="http://www.w3.org/2000/svg" and viewBox.
 5. Return ONLY the raw SVG code inside an \`\`\`xml ... \`\`\` code block. Do NOT include markdown commentary before or after.`;
-
-    const ollamaCfg = getOllamaConfig();
 
     const ollamaResult = await generateWithOllama({
       prompt: userPrompt,
@@ -104,9 +132,11 @@ Strict Rules:
     return NextResponse.json(
       {
         success: false,
-        error: errorMsg,
+        error: "Failed to refine SVG with Ollama. Please verify the AI service is reachable and try again.",
       },
       { status: 500 }
     );
+  } finally {
+    llmConcurrencyLimiter.release();
   }
 }

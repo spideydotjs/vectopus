@@ -27,9 +27,9 @@ services:
     image: ollama/ollama:latest
     container_name: vectopus-ollama
     restart: unless-stopped
-    # Map to host port 11435 to avoid port collision if host machine has native Ollama on 11434
+    # Map to host port 11435 on localhost only to prevent unauthorized remote access
     ports:
-      - "${OLLAMA_HOST_PORT:-11435}:11434"
+      - "127.0.0.1:${OLLAMA_HOST_PORT:-11435}:11434"
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:

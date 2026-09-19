@@ -69,17 +69,27 @@ export function preprocessImage(
   imageEl: HTMLImageElement,
   opts: PreprocessOptions,
 ): { dataUrl: string; detectedColor?: string } {
+  const MAX_DIMENSION = 4096;
+  let targetWidth = imageEl.naturalWidth || 1;
+  let targetHeight = imageEl.naturalHeight || 1;
+
+  if (targetWidth > MAX_DIMENSION || targetHeight > MAX_DIMENSION) {
+    const scale = Math.min(MAX_DIMENSION / targetWidth, MAX_DIMENSION / targetHeight);
+    targetWidth = Math.max(1, Math.round(targetWidth * scale));
+    targetHeight = Math.max(1, Math.round(targetHeight * scale));
+  }
+
   const canvas = document.createElement("canvas");
-  canvas.width = imageEl.naturalWidth;
-  canvas.height = imageEl.naturalHeight;
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     throw new Error("Could not get 2D context from canvas");
   }
 
-  // Draw initial image
-  ctx.drawImage(imageEl, 0, 0);
+  // Draw initial image scaled cleanly
+  ctx.drawImage(imageEl, 0, 0, targetWidth, targetHeight);
 
   const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imgData.data;

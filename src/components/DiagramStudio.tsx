@@ -527,10 +527,11 @@ export function DiagramStudio({
     letter-spacing: -0.015em !important;
     fill: ${palette.textColor} !important;
   }
-  .label text, .nodeLabel, .node text {
+  .label text, .nodeLabel, .node text, .label, span.nodeLabel {
     font-size: ${activeFontSize} !important;
     font-weight: 600 !important;
     fill: ${palette.textColor} !important;
+    color: ${palette.textColor} !important;
   }
   .edgeLabel {
     font-size: ${fontSz === "xlarge" ? "13px" : "11px"} !important;
@@ -547,6 +548,7 @@ export function DiagramStudio({
     font-size: ${fontSz === "xlarge" ? "13px" : "11px"} !important;
     font-weight: 500 !important;
     fill: ${palette.textColor} !important;
+    color: ${palette.textColor} !important;
   }
 </style>
 `;

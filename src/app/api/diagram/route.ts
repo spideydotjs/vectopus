@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cleanMermaidCode } from "@/lib/diagrams";
-import { checkOllamaHealth, generateWithOllama, getOllamaConfig } from "@/lib/ollama";
+import { checkOllamaHealth, generateWithOllama } from "@/lib/ollama";
+import { checkRateLimit, llmConcurrencyLimiter } from "@/lib/rate-limit";
 
 export async function GET() {
   const ollamaHealth = await checkOllamaHealth();
@@ -18,6 +19,24 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limiting by client IP
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  const rateLimitResult = checkRateLimit(`diagram_${clientIp}`, 20, 60000);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { success: false, error: "Rate limit exceeded. Please wait a minute before generating more diagrams." },
+      { status: 429 }
+    );
+  }
+
+  // Concurrency check
+  if (!llmConcurrencyLimiter.acquire()) {
+    return NextResponse.json(
+      { success: false, error: "Server is currently busy generating another diagram. Please try again in a few seconds." },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await req.json();
     const {
@@ -31,6 +50,7 @@ export async function POST(req: NextRequest) {
       compact = false,
     } = body;
 
+    // Validate inputs
     if (!prompt && action !== "expand_node") {
       return NextResponse.json(
         { success: false, error: "Prompt is required." },
@@ -38,19 +58,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (prompt && typeof prompt === "string" && prompt.length > 2000) {
+      return NextResponse.json(
+        { success: false, error: "Prompt exceeds maximum allowed length of 2,000 characters." },
+        { status: 400 }
+      );
+    }
+
+    if (existingCode && typeof existingCode === "string" && existingCode.length > 50000) {
+      return NextResponse.json(
+        { success: false, error: "Existing diagram code exceeds size limit." },
+        { status: 400 }
+      );
+    }
+
+    const safeOrientation = ["TD", "TB", "LR", "RL", "BT"].includes(orientation) ? orientation : "TD";
+    const safeType = type === "mindmap" ? "mindmap" : "flowchart";
+
     // Build the AI instruction prompt
     let userPrompt = "";
 
     if (action === "expand_node" && nodeToExpand) {
-      if (type === "mindmap") {
+      const safeLabel = String(nodeToExpand.label || "").slice(0, 200).replace(/[<>\\]/g, "");
+      const safeId = String(nodeToExpand.id || "").slice(0, 100).replace(/[^a-zA-Z0-9_-]/g, "");
+
+      if (safeType === "mindmap") {
         userPrompt = `You are an expert visual knowledge architect and programmer.
 Given this existing Mermaid mindmap:
 \`\`\`mermaid
 ${existingCode}
 \`\`\`
 
-The user wants to EXPAND the specific node/topic: "${nodeToExpand.label}".
-Provide 3 to 5 specific, high-value sub-branches or detailed subtopics for "${nodeToExpand.label}".
+The user wants to EXPAND the specific node/topic: "${safeLabel}".
+Provide 3 to 5 specific, high-value sub-branches or detailed subtopics for "${safeLabel}".
 Rules:
 - NEVER use emojis in topic labels. Use clean, professional text.
 Respond with a JSON object in this exact format:
@@ -66,22 +106,23 @@ Given this existing Mermaid flowchart:
 ${existingCode}
 \`\`\`
 
-Expand the step/node: "${nodeToExpand.label}" (id: ${nodeToExpand.id}).
+Expand the step/node: "${safeLabel}" (id: ${safeId}).
 Break down this step into a detailed, robust sub-process or subgraph with 3 to 5 internal steps, error handling, and decision branches.
-Return the COMPLETE, UPDATED, VALID Mermaid flowchart (${orientation}) code.
+Return the COMPLETE, UPDATED, VALID Mermaid flowchart (${safeOrientation}) code.
 Requirements:
-1. Start with 'flowchart ${orientation}'.
-2. Replace or enclose "${nodeToExpand.id}" inside a detailed subgraph or sequence.
+1. Start with 'flowchart ${safeOrientation}'.
+2. Replace or enclose "${safeId}" inside a detailed subgraph or sequence.
 3. Every node label must be enclosed in double quotes: id["Label"].
 4. NEVER use emojis in node labels. Use clean, executive-ready technical wording.
 5. Output ONLY the raw Mermaid code block. No explanations.`;
       }
     } else {
       // Standard generation
-      if (type === "mindmap") {
+      const safeUserPrompt = String(prompt || "").replace(/[`\\]/g, "");
+      if (safeType === "mindmap") {
         userPrompt = `You are an elite visual information architect and executive diagram designer.
 Create a clean, professional, richly structured Mermaid.js mindmap about:
-"${prompt}"
+"${safeUserPrompt}"
 
 Complexity level: ${complexity}.
 
@@ -117,14 +158,14 @@ Strict Rules for the Mermaid Mindmap:
               : "Provide a balanced, clear workflow with 8 to 12 steps including decision points and alternative paths.";
 
         userPrompt = `You are a principal systems architect and software engineer. Create a professional, clear Mermaid.js flowchart about:
-"${prompt}"
+"${safeUserPrompt}"
 
-Flowchart orientation: ${orientation}
+Flowchart orientation: ${safeOrientation}
 ${complexityGuide}
 ${pptGuide}
 
 Strict Rules for Mermaid Flowchart:
-1. Start with the line: 'flowchart ${orientation}'
+1. Start with the line: 'flowchart ${safeOrientation}'
 2. Use alphanumeric node IDs (e.g. Start, Auth, Check, DB, End).
 3. Format nodes with quotes immediately adjacent to brackets without spaces:
    - Start(["Start Terminal"]) for start/end terminals.
@@ -140,13 +181,11 @@ Strict Rules for Mermaid Flowchart:
       }
     }
 
-    const ollamaCfg = getOllamaConfig();
-
     const ollamaResult = await generateWithOllama({
       prompt: userPrompt,
       system:
         "You are an expert Qwen 2.5 Coder diagram architect specializing in Mermaid.js and clean software architectures. Output ONLY valid Mermaid syntax or requested JSON. No preamble or markdown outside code blocks.",
-      format: action === "expand_node" && type === "mindmap" ? "json" : undefined,
+      format: action === "expand_node" && safeType === "mindmap" ? "json" : undefined,
       temperature: 0.15,
     });
 
@@ -154,16 +193,16 @@ Strict Rules for Mermaid Flowchart:
     const usedModel = ollamaResult.model;
 
     // If expanding mindmap, parse JSON children
-    if (action === "expand_node" && type === "mindmap") {
+    if (action === "expand_node" && safeType === "mindmap") {
       try {
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        const jsonMatch = responseText.match(/\{[\s\S]*?\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           if (Array.isArray(parsed.expandedChildren) && parsed.expandedChildren.length > 0) {
             return NextResponse.json({
               success: true,
               action: "expand_node",
-              expandedChildren: parsed.expandedChildren,
+              expandedChildren: parsed.expandedChildren.map((item: unknown) => String(item).slice(0, 100)),
               provider: "ollama",
               model: usedModel,
             });
@@ -181,7 +220,7 @@ Strict Rules for Mermaid Flowchart:
       return NextResponse.json({
         success: true,
         action: "expand_node",
-        expandedChildren: cleanLines.slice(0, 5),
+        expandedChildren: cleanLines.slice(0, 5).map((l) => l.slice(0, 100)),
         provider: "ollama",
         model: usedModel,
       });
@@ -193,7 +232,7 @@ Strict Rules for Mermaid Flowchart:
       success: true,
       code: cleanedCode,
       raw: responseText,
-      type,
+      type: safeType,
       provider: "ollama",
       model: usedModel,
     });
@@ -204,9 +243,11 @@ Strict Rules for Mermaid Flowchart:
     return NextResponse.json(
       {
         success: false,
-        error: errorMsg,
+        error: "Failed to generate diagram with Ollama. Please check that the local AI service is online and try again.",
       },
       { status: 500 }
     );
+  } finally {
+    llmConcurrencyLimiter.release();
   }
 }

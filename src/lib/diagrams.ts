@@ -177,7 +177,9 @@ export function parseMindmapToTree(mermaidCode: string): MindmapTreeNode | null 
     }
 
     // Clean up "root" keyword prefix if any
-    label = label.replace(/^root\s+/i, "");
+    label = label.replace(/^root\s+/i, "").trim();
+    // Strip surrounding quotes if present
+    label = label.replace(/^["']|["']$/g, "").trim();
 
     return {
       id: `node_${index}_${label.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 15)}`,
